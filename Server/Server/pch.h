@@ -8,6 +8,8 @@
 #include <vector>
 #include <queue>
 #include <thread>
+#include <atomic>
+#include <map>
 
 #include "99.Header/Protocol.h"
 #include "99.Header/Types.h"

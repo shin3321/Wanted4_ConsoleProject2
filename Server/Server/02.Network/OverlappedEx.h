@@ -8,6 +8,36 @@ enum class OP_TYPE
 
 };
 
+//OVERLAPPED 확장 구조체
+struct OverlappedEx
+{
+	WSAOVERLAPPED _overlapped;
+	// 데이터 버퍼
+	WSABUF _wsaBuf;
+	char _buffer[BUFSIZE] = {};
+	OP_TYPE _type;
+
+	//recv용 생성자
+	OverlappedEx()
+	{
+		_wsaBuf.len = BUFSIZE;
+		_wsaBuf.buf = _buffer;
+		ZeroMemory(&_overlapped, sizeof(_overlapped));
+		_type = OP_TYPE::RECV;
+	}
+
+	//send용 생성자
+	OverlappedEx(char* packet, size_t packetSize)
+	{
+		_wsaBuf.len = BUFSIZE;
+		_wsaBuf.buf = _buffer;
+		ZeroMemory(&_overlapped, sizeof(_overlapped));
+		_type = OP_TYPE::SEND;
+
+		memcpy(_buffer, packet, packetSize);
+	}
+};
+
 class OverlappedExPool
 {
 public:
@@ -48,35 +78,4 @@ public:
 private:
 	std::mutex _poolMutex;
 	std::queue<OverlappedEx*> _pool;
-};
-
-
-//OVERLAPPED 확장 구조체
-struct OverlappedEx
-{
-	WSAOVERLAPPED _overlapped;
-	// 데이터 버퍼
-	WSABUF _wsaBuf;
-	char _buffer[BUFSIZE] = {};
-	OP_TYPE _type;
-
-	//recv용 생성자
-	OverlappedEx()
-	{
-		_wsaBuf.len = BUFSIZE;
-		_wsaBuf.buf = _buffer;
-		ZeroMemory(&_overlapped, sizeof(_overlapped));
-		_type = OP_TYPE::RECV;
-	}
-
-	//send용 생성자
-	OverlappedEx(char* packet, size_t packetSize)
-	{
-		_wsaBuf.len = BUFSIZE;
-		_wsaBuf.buf = _buffer;
-		ZeroMemory(&_overlapped, sizeof(_overlapped));
-		_type = OP_TYPE::SEND;
-
-		memcpy(_buffer, packet, packetSize);
-	}
 };

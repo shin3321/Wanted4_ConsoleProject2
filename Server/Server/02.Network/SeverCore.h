@@ -1,8 +1,11 @@
 #pragma once
+
 class SeverCore
 {
 
 public:
+	SeverCore();
+	~SeverCore();
 	//iocp 객체 생성
 	void init();
 	void registerHandle(HANDLE handle);
@@ -15,6 +18,10 @@ public:
 	
 	//getter
 	HANDLE getHandle() { return _iocpHandle; }
+
+private:
+
+
 private:
 	//서버 연결 소켓
 	SOCKET _listenSocket;

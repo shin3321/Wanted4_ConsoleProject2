@@ -1,5 +1,17 @@
 #include "pch.h"
 #include "SeverCore.h"
+#include "01.Game/Game.h"
+
+SeverCore::SeverCore()
+:_overlappedPool(10)
+{
+	
+}
+
+SeverCore::~SeverCore()
+{
+
+}
 
 void SeverCore::init()
 {
@@ -38,13 +50,17 @@ void SeverCore::init()
 
 	//클라이언트 소켓 만들기
 	_clientSocket = ::WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-	_acceptOverlapped._type = OP_TYPE::ACCEPT;
+
 	//accept
+	_acceptOverlapped._type = OP_TYPE::ACCEPT;
+
 	//최소 16바이트 이상이어야 해서 16을 더해줌
 	::AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._buffer, 0,
 		addrSize + 16, addrSize + 16, 0, &_acceptOverlapped._overlapped);
 
 	std::cout << "Waiting for Client Connection\n";
+
+	Game::get().init(_iocpHandle, _overlappedPool);
 
 	std::vector<std::thread> workThreads;
 	int MaxThreadNum = getCore();
@@ -62,6 +78,7 @@ void SeverCore::init()
 
 	closesocket(_listenSocket);
 	WSACleanup();
+
 }
 
 void SeverCore::registerHandle(HANDLE handle)
@@ -71,6 +88,7 @@ void SeverCore::registerHandle(HANDLE handle)
 
 void SeverCore::runWorkThread()
 {
+	
 	while (true)
 	{
 		//받은 크기
@@ -94,9 +112,37 @@ void SeverCore::runWorkThread()
 			else
 			{
 				std::cout << "GQCS Error on client[" << key << "]\n";
-				if(ex_over) 
+				if (ex_over->_type == OP_TYPE::SEND) _overlappedPool.freeOver(ex_over);
+				continue;
 			}
 		}
+		if ((numbytes == 0) && ((ex_over->_type == OP_TYPE::RECV) || (ex_over->_type == OP_TYPE::SEND)))
+		{
+			if (ex_over->_type == OP_TYPE::SEND) _overlappedPool.freeOver(ex_over);
+			continue;
+		}
+
+		switch (ex_over->_type)
+		{
+		case OP_TYPE::ACCEPT:
+		{			
+			Game::get().accept(_clientSocket);
+
+			_clientSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+			ZeroMemory(&_acceptOverlapped, sizeof(_acceptOverlapped._overlapped));
+			int addrSize = sizeof(SOCKADDR_IN);
+			AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._buffer, 0, addrSize + 16, addrSize + 16, 0, &_acceptOverlapped._overlapped);
+
+			break;
+		}
+		case OP_TYPE::RECV:
+		{
+
+
+			break;
+		}
+		}
+
 	}
 }
 
