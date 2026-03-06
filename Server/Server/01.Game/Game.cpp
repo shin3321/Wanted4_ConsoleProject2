@@ -132,7 +132,7 @@ void Game::loadMap()
 	std::vector<std::string> lines;
 	Packet mapPacket;
 	mapPacket.write<uint16_t>(0);
-	mapPacket.write<uint16_t>(PK_SC_MAP);
+	mapPacket.write<uint16_t>(PK_SC_GAME_START);
 	mapPacket.write<uint16_t>(_width);
 	mapPacket.write<uint16_t>(_height);
 							  
@@ -184,19 +184,6 @@ void Game::waitingRoom(uint16_t id)
 	std::shared_ptr<Session> session = sessions[id];
 	session->doSend(waitingRoom.getBuffer().data(), totalSize);
 	Timer event{ id, std::chrono::system_clock::now() + 2s, TimerEvent::EV_GAME_START, 0};
-}
-
-void Game::sendGameStart()
-{
-	Packet startGame;
-	startGame.write<uint16_t>(0);
-	startGame.write<uint16_t>(PK_SC_GAME_START);
-	uint16_t totalSize = static_cast<uint16_t>(startGame.getBuffer().size());
-	uint16_t networkSize = htons(totalSize);
-	memcpy(&startGame.getBuffer()[0], &networkSize, sizeof(uint16_t));
-
-	broadcast(startGame.getBuffer().data(), totalSize);
-	loadMap();
 }
 
 void Game::broadcast(const char* data, uint16 packetSize)

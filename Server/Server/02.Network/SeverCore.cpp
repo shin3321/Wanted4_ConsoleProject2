@@ -151,7 +151,7 @@ void SeverCore::runWorkThread()
 		}
 		case OP_TYPE::GAME_START:
 		{
-
+			Game::get().loadMap();
 			break;
 		}
 

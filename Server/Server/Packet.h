@@ -3,8 +3,7 @@
 constexpr uint16 PK_SC_MAP_LOAD = 1;
 constexpr uint16 PK_CS_ID = 2;
 constexpr uint16 PK_SC_WAITING = 3;
-constexpr uint16 PK_SC_MAP = 4;
-constexpr uint16 PK_SC_GAME_START = 5;
+constexpr uint16 PK_SC_GAME_START = 4;
 
 class Packet
 {

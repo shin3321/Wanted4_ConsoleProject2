@@ -30,8 +30,6 @@ public:
 	void loadMap();
 	void waitingRoom(uint16 id);
 
-	//게임 시작 함수
-	void sendGameStart();
 
 	void broadcast(const char* data, uint16 packetSize);
 
