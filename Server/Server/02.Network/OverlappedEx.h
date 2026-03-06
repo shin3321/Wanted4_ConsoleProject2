@@ -1,10 +1,11 @@
-#pragma once
+﻿#pragma once
 
 enum class OP_TYPE
 {
 	ACCEPT,
 	RECV,
 	SEND,
+	GAME_START,
 
 };
 

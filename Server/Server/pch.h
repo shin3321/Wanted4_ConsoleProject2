@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 #include <string>
@@ -10,10 +10,15 @@
 #include <thread>
 #include <atomic>
 #include <map>
+#include <memory>
+#include <string.h> 
 
 #include "99.Header/Protocol.h"
 #include "99.Header/Types.h"
 #include "02.Network/OverlappedEx.h"
+#include "02.Network/RingBuffer.h"
+#include "02.Network/TimerEvent.h"
+#include "Packet.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "Mswsock.lib")

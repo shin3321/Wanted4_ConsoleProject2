@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "SeverCore.h"
 #include "01.Game/Game.h"
 
@@ -128,6 +128,7 @@ void SeverCore::runWorkThread()
 		{			
 			Game::get().accept(_clientSocket);
 
+			//다른 클라이언트를 받기 위해 accept 열어 두기
 			_clientSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 			ZeroMemory(&_acceptOverlapped, sizeof(_acceptOverlapped._overlapped));
 			int addrSize = sizeof(SOCKADDR_IN);
@@ -137,10 +138,23 @@ void SeverCore::runWorkThread()
 		}
 		case OP_TYPE::RECV:
 		{
+			//받은ㅇ 데이터가 없으면 소켓 닫음
+			if (numbytes == 0)
+			{
+				std::cout << "Recv Buffer Overflow. Dropping Session\n";
+				Game::get().closeSocket(key);
+			}
 
+			numbytes = static_cast<uint16_t>(numbytes);
+			Game::get().recv(key, numbytes);
+			break;
+		}
+		case OP_TYPE::GAME_START:
+		{
 
 			break;
 		}
+
 		}
 
 	}

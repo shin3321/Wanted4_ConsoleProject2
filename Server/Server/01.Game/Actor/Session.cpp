@@ -1,8 +1,8 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "Session.h"
 
 Session::Session(OverlappedExPool& pool)
-	: _overlappedPool(&pool)
+	: _overlappedPool(&pool), _recvBuf(BUFSIZE)
 {
 }
 
@@ -32,14 +32,13 @@ void Session::doSend(const char* packet, uint16_t packetSize)
 void Session::doRecv()
 {
 	DWORD recvFlag = 0;
+	ZeroMemory(&_recvOver._overlapped, sizeof(_recvOver._overlapped));
+	_recvOver._wsaBuf.buf = (char*)&_recvBuf._buffer[_recvBuf._tail];
+	_recvOver._wsaBuf.len = _recvBuf.freeSize();
+	_recvOver._type = OP_TYPE::RECV;
 
-	_recvOver = _overlappedPool->allocOver();
-	//ZeroMemory(&_recvOver._overlapped, sizeof(_recvOver._overlapped));
-	//_recvOver->_wsaBuf.len = BUFSIZE;
-	//_recvOver->_wsaBuf.buf = _recvOver->_buffer;
-	_recvOver->_type = OP_TYPE::RECV;
-
-	int ret = ::WSARecv(_socket, &_recvOver->_wsaBuf, 1, 0, &recvFlag, &_recvOver->_overlapped, 0);
+	//_recvOver의 버퍼를 io 요청해 두는 것
+	int ret = ::WSARecv(_socket, &_recvOver._wsaBuf, 1, 0, &recvFlag, &_recvOver._overlapped, 0);
 	if (ret == SOCKET_ERROR)
 	{
 		int err = WSAGetLastError();

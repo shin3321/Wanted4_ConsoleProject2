@@ -1,8 +1,11 @@
-#pragma once
+﻿#pragma once
 
-constexpr int PK_SC_MAP_LOAD = 1;
+constexpr uint16 PK_SC_MAP_LOAD = 1;
+constexpr uint16 PK_CS_ID = 2;
+constexpr uint16 PK_SC_WAITING = 3;
+constexpr uint16 PK_SC_MAP = 4;
+constexpr uint16 PK_SC_GAME_START = 5;
 
-template<typename T>
 class Packet
 {
 public:
@@ -10,7 +13,7 @@ public:
 	{
 		_buffer.reserve(BUFSIZE);
 	}
-
+template<typename T>
 	//패킷에 데이터 쓰기
 	void write(T value)
 	{
@@ -22,7 +25,7 @@ public:
 		_buffer.resize(oldSize + size);
 
 		//새로운 값을 버퍼에 넣음
-		std::memcpy(_buffer, &value, size);
+		std::memcpy(&_buffer[oldSize], &value, size);
 	}
 
 	inline void writeString(const std::string& str)
@@ -34,7 +37,8 @@ public:
 		std::memcpy(&_buffer[oldSize], str.data(), len);
 	}
 
-	void read(T value)
+	template<typename T>
+	T read(T value)
 	{
 		T value;
 		//읽을 사이즈가 버퍼 크기를 벗어나면 실패
