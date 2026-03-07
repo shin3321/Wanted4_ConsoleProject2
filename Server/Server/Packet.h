@@ -5,6 +5,12 @@ constexpr uint16 PK_CS_ID = 2;
 constexpr uint16 PK_SC_WAITING = 3;
 constexpr uint16 PK_SC_GAME_START = 4;
 
+constexpr uint16 PK_SC_SPAWN_UNIT = 5;
+constexpr uint16 PK_CS_SPAWN_UNIT = 6;
+
+constexpr uint16 PK_SC_MOVE_UNIT = 7;
+constexpr uint16 PK_CS_MOVE_UNIT = 8;
+
 class Packet
 {
 public:
@@ -27,6 +33,14 @@ template<typename T>
 		std::memcpy(&_buffer[oldSize], &value, size);
 	}
 
+	// 가공된 버퍼나 배열을 한 번에 밀어넣는 기능
+	void writeBuffer(const void* src, size_t size)
+	{
+		size_t oldSize = _buffer.size();
+		_buffer.resize(oldSize + size);
+		std::memcpy(&_buffer[oldSize], src, size);
+	}
+
 	inline void writeString(const std::string& str)
 	{
 		uint16_t len = static_cast<uint16_t>(str.size());
@@ -38,6 +52,25 @@ template<typename T>
 
 	template<typename T>
 	T read(T value)
+	{
+		T value;
+		//읽을 사이즈가 버퍼 크기를 벗어나면 실패
+		if (_readPos + sizeof(T) > _buffer.size())
+		{
+			__debugbreak();
+		}
+		std::memcpy(&value, &_buffer[_readPos], sizeof(T));
+		_readPos += sizeof(T);
+		return value;
+	}
+
+	size_t size()
+	{
+		return _buffer.size();
+	}
+
+	template<typename T>
+	T read()
 	{
 		T value;
 		//읽을 사이즈가 버퍼 크기를 벗어나면 실패

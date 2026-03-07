@@ -9,14 +9,12 @@ Session::Session(OverlappedExPool& pool)
 void Session::doSend(const char* packet, uint16_t packetSize)
 {
 	_sendOver = _overlappedPool->allocOver();
-	_sendOver->_wsaBuf.len = packetSize;
-	_sendOver->_type = OP_TYPE::SEND;
-
-	memcpy(_sendOver->_buffer, packet, packetSize);
+	_sendOver->reset(packet, packetSize);
 
 	std::cout << packetSize << "\n";
 
-	int ret = WSASend(_socket, &_sendOver->_wsaBuf, 1, nullptr, 0, &_sendOver->_overlapped, nullptr);
+	int ret = WSASend(_socket, &_sendOver->_wsaBuf, 1, nullptr, 0,&_sendOver->_overlapped, nullptr);
+
 	if (ret == SOCKET_ERROR)
 	{
 		int err = WSAGetLastError();

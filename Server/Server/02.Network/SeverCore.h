@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 class SeverCore
 {
@@ -12,6 +12,9 @@ public:
 
 	//getqueuecompletionstatus
 	void runWorkThread();
+
+	//timer 이벤트 함수
+	void doTimer();
 
 	//core 개수
 	int getCore();
@@ -31,6 +34,11 @@ private:
 	OverlappedEx _acceptOverlapped;
 	OverlappedExPool _overlappedPool;
 
+	//타이머 이벤트용 overlapped구조체
+	//OverlappedEx* _timerOver;
+
 	HANDLE _iocpHandle;
+
+	std::atomic<bool> _running = true;
 };
 

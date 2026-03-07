@@ -10,10 +10,12 @@
 #include <thread>
 #include <atomic>
 #include <map>
+#include <unordered_map>
 #include <memory>
 #include <string.h> 
 
 #include "99.Header/Protocol.h"
+#include "99.Header/Vector2.h"
 #include "99.Header/Types.h"
 #include "02.Network/OverlappedEx.h"
 #include "02.Network/RingBuffer.h"

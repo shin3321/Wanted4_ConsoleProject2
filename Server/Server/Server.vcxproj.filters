@@ -95,5 +95,8 @@
     <ClInclude Include="02.Network\TimerEvent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="99.Header\Vector2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

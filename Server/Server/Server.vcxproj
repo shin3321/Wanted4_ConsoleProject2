@@ -117,6 +117,7 @@
     <ClInclude Include="99.Header\Types.h" />
     <ClInclude Include="02.Network\Listener.h" />
     <ClInclude Include="01.Game\Actor\GameSession.h" />
+    <ClInclude Include="99.Header\Vector2.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="01.Game\Actor\Unit.h" />

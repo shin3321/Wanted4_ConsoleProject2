@@ -6,17 +6,20 @@
 //===============================
 
 class GameSession;
+class Unit;
 class Player
 {
 public:
 	Player(std::string nickname);
 
 public:
-	void setNickname(std::string nickname);
-
+	void addUnit(uint16 unitId, std::shared_ptr<Unit> unit);
+	
 private:
 	//std::shared_ptr<GameSession> _session;
 
 	std::string _nickname;
+
+	std::map<uint16, std::shared_ptr<Unit>> _units;
 };
 

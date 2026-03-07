@@ -3,9 +3,9 @@
 #include "01.Game/Game.h"
 
 SeverCore::SeverCore()
-:_overlappedPool(10)
+	:_overlappedPool(10)
 {
-	
+
 }
 
 SeverCore::~SeverCore()
@@ -55,15 +55,15 @@ void SeverCore::init()
 	_acceptOverlapped._type = OP_TYPE::ACCEPT;
 
 	//최소 16바이트 이상이어야 해서 16을 더해줌
-	::AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._buffer, 0,
+	::AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._acceptBuf, 0,
 		addrSize + 16, addrSize + 16, 0, &_acceptOverlapped._overlapped);
 
 	std::cout << "Waiting for Client Connection\n";
 
 	Game::get().init(_iocpHandle, _overlappedPool);
 
-	std::vector<std::thread> workThreads;
 	int MaxThreadNum = getCore();
+	std::vector<std::thread> workThreads;
 	for (int i = 0; i < MaxThreadNum; ++i)
 	{
 		workThreads.emplace_back([this]() {
@@ -71,9 +71,32 @@ void SeverCore::init()
 			});
 	}
 
+	std::thread timerThread{ &SeverCore::doTimer, this };
+	std::thread inputThread([this, MaxThreadNum]()
+		{
+			while (true)
+			{
+				if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+				{
+					std::cout << "Server Shutting Down...\n";
+					_running = false;  // 종료 플래그
+					timer_cv.notify_all();
+					// IOCP 워커 스레드 깨우기
+					for (int i = 0; i < MaxThreadNum; ++i)
+						PostQueuedCompletionStatus(_iocpHandle, 0, 0, nullptr);
+					break;
+				}
+				Sleep(100);
+			}
+		});
+
+	inputThread.join();
+
+	if (timerThread.joinable()) timerThread.join();
+
 	for (auto& thread : workThreads)
 	{
-		thread.join();
+		if (thread.joinable()) thread.join();
 	}
 
 	closesocket(_listenSocket);
@@ -88,8 +111,7 @@ void SeverCore::registerHandle(HANDLE handle)
 
 void SeverCore::runWorkThread()
 {
-	
-	while (true)
+	while (_running)
 	{
 		//받은 크기
 		DWORD numbytes;
@@ -104,6 +126,11 @@ void SeverCore::runWorkThread()
 		BOOL ret = GetQueuedCompletionStatus(_iocpHandle, &numbytes, &key, &over, INFINITE);
 
 		OverlappedEx* ex_over = reinterpret_cast<OverlappedEx*>(over);
+		if (over == nullptr)
+		{
+			std::cout << "Worker Thread Exit\n";
+			return;
+		}
 
 		if (FALSE == ret)
 		{
@@ -125,14 +152,17 @@ void SeverCore::runWorkThread()
 		switch (ex_over->_type)
 		{
 		case OP_TYPE::ACCEPT:
-		{			
+		{
 			Game::get().accept(_clientSocket);
+
 
 			//다른 클라이언트를 받기 위해 accept 열어 두기
 			_clientSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 			ZeroMemory(&_acceptOverlapped, sizeof(_acceptOverlapped._overlapped));
 			int addrSize = sizeof(SOCKADDR_IN);
-			AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._buffer, 0, addrSize + 16, addrSize + 16, 0, &_acceptOverlapped._overlapped);
+			//accept
+			_acceptOverlapped._type = OP_TYPE::ACCEPT;
+			AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._acceptBuf, 0, addrSize + 16, addrSize + 16, 0, &_acceptOverlapped._overlapped);
 
 			break;
 		}
@@ -155,6 +185,46 @@ void SeverCore::runWorkThread()
 			break;
 		}
 
+		}
+
+	}
+}
+
+void SeverCore::doTimer()
+{
+	while (_running)
+	{
+		std::unique_lock<std::mutex> lock(timer_mutex);
+		if (timer_queue.empty())
+		{
+			timer_cv.wait(lock);
+			continue;
+		}
+
+		auto now = std::chrono::system_clock::now();
+		auto nextEvent = timer_queue.top();
+
+		//다음 이벤트 시작 시간이 남았으면 기다림
+		if (nextEvent.wakeUpTime > now)
+		{
+			timer_cv.wait_until(lock, nextEvent.wakeUpTime);
+			continue;
+		}
+
+		timer_queue.pop();
+		lock.unlock();
+
+		auto timerOver = _overlappedPool.allocOver();
+
+		switch (nextEvent._eventType)
+		{
+		case TimerEvent::EV_GAME_START:
+		{
+			timerOver->_type = OP_TYPE::GAME_START;
+			timerOver->_targetId = nextEvent.playerId;
+			PostQueuedCompletionStatus(_iocpHandle, 1, nextEvent.playerId, &timerOver->_overlapped);
+			break;
+		}
 		}
 
 	}

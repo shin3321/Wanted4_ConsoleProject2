@@ -5,30 +5,49 @@
 #include "Packet.h"
 
 
-void PacketHandler::handlePacket(char* buffer, uint16_t id)
+void PacketHandler::handlePacket(char* buffer, uint16_t id, uint16 packetSize)
 {
-	uint16 type = buffer[2];
+	Packet packet;
+	packet.getBuffer().assign(buffer, buffer + packetSize);
 
-	switch (type)
+	uint16_t totalSize = packet.read<uint16_t>();   // 전체 크기
+	uint16_t packetId = packet.read<uint16_t>();   // 패킷 타임
+
+	
+	std::cout << "User " << id << "PacketType: " << packetId << "\n";
+
+	switch (packetId)
 	{
 	case PK_CS_ID:
 	{
-		handleLogin(buffer, id);
+		handleLogin(packet, id);
 		break;
 	}
+	
+	case PK_CS_SPAWN_UNIT:
+	{
+		handleUnitSpawn(packet, id);
+		break;
+	}
+
 	}
 
 }
 
-void PacketHandler::handleLogin(char* packet, uint16_t id)
+void PacketHandler::handleLogin(Packet& loginPacket, uint16_t id)
 {
 	uint16_t offset = 0;
-	//사이즈와 타입 ㄷ더하기	
-
-	offset += sizeof(uint16_t) * 2;
-	uint16_t nickNameSize = sizeof(packet) - (sizeof(uint16_t) * 2);
-	std::string nickName(reinterpret_cast<char*>(&packet[offset]), nickNameSize);
+	//사이즈와 타입 더하기	
+	std::string nickName(reinterpret_cast<char*>(&loginPacket), loginPacket.size());
 
 	Game::get().setPlayer(std::make_shared<Player>(nickName), id);
 	Game::get().waitingRoom(id);
+}
+
+void PacketHandler::handleUnitSpawn(Packet& unitPacket, uint16_t id)
+{
+	uint16_t playerId = unitPacket.read<uint16_t>();
+	Vector2 spawnPos = unitPacket.read<Vector2>();
+
+	Game::get().spawnUnit(playerId, spawnPos);
 }

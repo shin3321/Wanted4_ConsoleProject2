@@ -15,27 +15,38 @@ struct OverlappedEx
 	WSAOVERLAPPED _overlapped;
 	// 데이터 버퍼
 	WSABUF _wsaBuf;
-	char _buffer[BUFSIZE] = {};
+	char _acceptBuf[BUFSIZE];
+	std::vector<char>  _buffer;
 	OP_TYPE _type;
+	uint16_t _targetId;
 
 	//recv용 생성자
 	OverlappedEx()
 	{
 		_wsaBuf.len = BUFSIZE;
-		_wsaBuf.buf = _buffer;
+		_wsaBuf.buf = _buffer.data();
 		ZeroMemory(&_overlapped, sizeof(_overlapped));
-		_type = OP_TYPE::RECV;
+		ZeroMemory(_acceptBuf, sizeof(_acceptBuf));
+		//_type = OP_TYPE::RECV;
 	}
 
 	//send용 생성자
 	OverlappedEx(char* packet, size_t packetSize)
 	{
-		_wsaBuf.len = BUFSIZE;
-		_wsaBuf.buf = _buffer;
+		_buffer.assign(packet, packet + packetSize);        
+		_wsaBuf.len = static_cast<ULONG>(packetSize);
+		_wsaBuf.buf = _buffer.data();
 		ZeroMemory(&_overlapped, sizeof(_overlapped));
 		_type = OP_TYPE::SEND;
-
-		memcpy(_buffer, packet, packetSize);
+	}    
+	
+	// 재사용 시 초기화
+	void reset(const char* packet, size_t packetSize)
+	{
+		_buffer.assign(packet, packet + packetSize);
+		_wsaBuf.len = static_cast<ULONG>(packetSize);
+		_wsaBuf.buf = _buffer.data();
+		ZeroMemory(&_overlapped, sizeof(_overlapped));
 	}
 };
 
@@ -70,7 +81,11 @@ public:
 	{
 		if (overlapped)
 		{
-			ZeroMemory(&overlapped, sizeof(OverlappedEx));
+			overlapped->_buffer.resize(BUFSIZE);
+			overlapped->_wsaBuf.len = BUFSIZE;
+			overlapped->_wsaBuf.buf = overlapped->_buffer.data();
+			ZeroMemory(&overlapped->_overlapped, sizeof(WSAOVERLAPPED));
+
 			std::lock_guard<std::mutex> lock(_poolMutex);
 			_pool.push(overlapped);
 		}
