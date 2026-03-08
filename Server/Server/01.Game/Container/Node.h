@@ -3,10 +3,16 @@
 #include <iostream>
 #include <99.Header/Vector2.h>
 
+class AStar;
 class Node
 {
-	friend AStar;
+	friend class AStar;
 public:
+	Node()
+		:_pos(0, 0), parentNode(nullptr), _gCost(0), _hCost(0), _fCost(0)
+	{
+	}
+
 	Node(Vector2 pos, Node* parentNode = nullptr)
 		:_pos(pos), _gCost(0), _hCost(0), _fCost(0), parentNode(nullptr)
 	{
@@ -32,6 +38,7 @@ private:
 	float  _hCost;
 	float  _fCost;
 
+	bool _isWall = 0;
 	Node* parentNode;
 
 };

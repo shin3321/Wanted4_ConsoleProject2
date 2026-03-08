@@ -31,7 +31,7 @@ void PacketHandler::handlePacket(char* buffer, uint16_t id, uint16 packetSize)
 	}
 	case PK_CS_MOVE_UNIT:
 	{
-		handleUnitSpawn(packet, id);
+		handleUnitMove(packet, id);
 		break;
 	}
 

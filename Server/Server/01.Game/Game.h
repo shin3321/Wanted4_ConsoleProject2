@@ -66,7 +66,7 @@ private:
 private:
 	//맵 너비, 높이
 	uint16_t _width = 256;
-	uint16_t _height = 95;
+	uint16_t _height = 96;
 	std::vector<uint8_t> _tiles;
 
 private:

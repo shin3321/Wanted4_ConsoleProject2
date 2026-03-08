@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Node.h"	
 
 template<typename T>
 void SafeDelete(T*& pointer)
@@ -27,18 +28,24 @@ private:
 
 
 public:
+public:
 	AStar();
 	~AStar();
 
 	//경로 검색 함수
-	std::vector<Node*> FindPath(Node* starNode, Node* goalNode);
+	std::vector<Vector2> FindPath(Vector2 starNode, Vector2 goalNode);
 
 	//맵 전달
 	void setMapData(std::vector<uint8>& mamData);
-
+	
+	//좌표 노드 변환
+	Node* getNode(Vector2 pos);
 private:
+	void clearLists();
+	void initGrid();
+
 	//탐색을 마친 후 최적 경로를 반환하는 함수
-	std::vector<Node*> constructPath(Node* goalNode);
+	std::vector<Vector2> constructPath(Node* goalNode);
 
 	//hCost 계산 함수
 	int calculateHeuristic(Node* currentNode, Node* goalNode);
@@ -55,6 +62,7 @@ private:
 	bool isMovable(int x, int y);
 
 private:
+
 	//열린 리스트 (방문할 노드)
 	std::vector<Node*> _openList;
 
@@ -68,5 +76,7 @@ private:
 	Node* _goalNode;
 
 	//맵 복사 데이터
-	std::vector<uint8>* _mapData;
+	std::vector<uint8>* _mapData; 
+	// A* 계산용 노드 그리드
+	std::vector<Node> _nodeGrid;
 };

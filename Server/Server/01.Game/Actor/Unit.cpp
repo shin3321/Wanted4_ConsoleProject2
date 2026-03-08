@@ -12,8 +12,15 @@ Unit::Unit(Vector2 pos, uint16 unitId, uint16 playerId)
 	_hp = _maxHp;
 }
 
-std::vector<Node*> Unit::moveUnit(Vector2 goalPos)
+std::vector<Vector2> Unit::moveUnit(Vector2 goalPos)
 {
-	//Todo 길찾기 연결 
-	return std::vector<Node*>();
+    _path = _aStar.FindPath(_pos, goalPos);
+
+    if (_path.empty())
+    {
+        // 경로 못 찾음 - 클라에 실패 응답
+        return{};
+    }
+    _pos = goalPos;
+    return _path;
 }

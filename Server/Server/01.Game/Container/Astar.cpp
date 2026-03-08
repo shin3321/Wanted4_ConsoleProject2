@@ -1,6 +1,6 @@
 ﻿#include "pch.h"
 #include "Astar.h"
-#include "Node.h"	
+
 
 #include <cmath>
 #include <algorithm>
@@ -11,29 +11,26 @@ AStar::AStar()
 
 AStar::~AStar()
 {
-	// 메모리 해제.
-	for (Node* node : _openList)
-	{
-		SafeDelete(node);
-	}
-	_openList.clear();
-
-	for (Node* node : _closedList)
-	{
-		SafeDelete(node);
-	}
-	_closedList.clear();
+	clearLists();
+	SafeDelete(_goalNode);
 }
 
-std::vector<Node*> AStar::FindPath(Node* startNode, Node* goalNode)
+std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 {
-	_startNode = startNode;
-	_goalNode = goalNode;
+	clearLists();
 
-	if (!_startNode || !_goalNode || _mapData->empty())
-	{
-		return std::vector<Node*>();
-	}
+	Node* startGridNode = getNode(startPos);
+	Node* goalGridNode = getNode(goalPos);
+
+	if (!startGridNode || !goalGridNode || _mapData->empty())
+		return {};
+
+	_startNode = new Node(startPos, nullptr);
+	_goalNode = new Node(goalPos, nullptr);
+
+	_startNode->_gCost = 0;
+	_startNode->_hCost = calculateHeuristic(_startNode, _goalNode);
+	_startNode->_fCost = _startNode->_hCost;
 
 	// 대각선 이동 비용 상수.
 	const float diagonalCost = 1.5;
@@ -69,7 +66,10 @@ std::vector<Node*> AStar::FindPath(Node* startNode, Node* goalNode)
 		//현재 노드가 목적지면 경로 보내기
 		if (isDestination(currentNode))
 		{
-			return constructPath(currentNode);
+			std::vector<Vector2> path = constructPath(currentNode);
+			clearLists();
+			SafeDelete(_goalNode); // goalNode는 리스트 밖에 있으니 별도 삭제
+			return path;
 		}
 
 		//방문 처리를 위해 현재 노드를 열린 리스트에서 제거
@@ -101,7 +101,6 @@ std::vector<Node*> AStar::FindPath(Node* startNode, Node* goalNode)
 			//이동할 위치가 장애물인 경우에는 무시
 			if ((*_mapData)[newY * MAP_WIDTH + newX] == 1)
 			{
-
 				continue;
 			}
 
@@ -170,22 +169,55 @@ std::vector<Node*> AStar::FindPath(Node* startNode, Node* goalNode)
 			_openList.emplace_back(neighborNode);
 		}
 	}
+	// 경로 못 찾은 경우
+	clearLists();
+	SafeDelete(_goalNode);
 	return {};
 }
 
 void AStar::setMapData(std::vector<uint8>& mamData)
 {
-
 	_mapData = &mamData;
+	initGrid();
 }
 
-std::vector<Node*> AStar::constructPath(Node* goalNode)
+Node* AStar::getNode(Vector2 pos)
 {
-	std::vector<Node*> path;
+	int x = static_cast<int>(pos.x);
+	int y = static_cast<int>(pos.y);
+	return &_nodeGrid[y * MAP_WIDTH + x];
+}
+
+void AStar::clearLists()
+{
+	for (Node* node : _openList)
+		SafeDelete(node);
+	_openList.clear();
+
+	for (Node* node : _closedList)
+		SafeDelete(node);
+	_closedList.clear();
+}
+
+void AStar::initGrid()
+{
+	_nodeGrid.resize(MAP_WIDTH * MAP_HEIGHT);
+	for (int y = 0; y < MAP_HEIGHT; y++)
+		for (int x = 0; x < MAP_WIDTH; x++)
+		{
+			int idx = y * MAP_WIDTH + x;
+			_nodeGrid[idx]._pos = { x, y };
+			_nodeGrid[idx]._isWall = ((*_mapData)[idx] == 1);
+		}
+}
+
+std::vector<Vector2> AStar::constructPath(Node* goalNode)
+{
+	std::vector<Vector2> path;
 	Node* currentNode = goalNode;
 	while (currentNode != nullptr)
 	{
-		path.emplace_back(currentNode);
+		path.emplace_back(currentNode->_pos);
 		currentNode = currentNode->parentNode;
 	}
 	std::reverse(path.begin(), path.end());

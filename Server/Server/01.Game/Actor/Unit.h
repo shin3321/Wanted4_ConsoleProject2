@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "01.Game/Container/Node.h"
 #include "01.Game/Container/Astar.h"
 
 class Unit
@@ -7,7 +6,7 @@ class Unit
 public:
     Unit();
     Unit(Vector2 pos, uint16 unitId, uint16 playerId);
-    std::vector<Node*> moveUnit(Vector2 goalPos);
+    std::vector<Vector2> moveUnit(Vector2 goalPos);
     void setMap(std::vector<uint8>& mapData) {
         _aStar.setMapData(mapData);
     }

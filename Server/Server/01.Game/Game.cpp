@@ -193,6 +193,7 @@ bool Game::isSpawnableUnit(uint16 playerId, Vector2 spawnPos)
 {
 	int tileX = (int)spawnPos.x;
 	int tileY = (int)spawnPos.y;
+	if (tileX < 0 || tileX > _width || tileY < 0 || tileY > _height) return false;
 
 	//빈 공간만 허용
 	if (_tiles[tileY * _width + tileX] != 0) return false;
@@ -255,7 +256,29 @@ void Game::moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos)
 	//Todo a* 이용한 길 찾기
 	if (unit)
 	{
-		unit->moveUnit(movePos);
+		std::vector<Vector2> path = unit->moveUnit(movePos);
+
+		if (path.empty())
+			return;
+		Packet movePacket;
+		movePacket.write<uint16>(0);                        
+		movePacket.write<uint16>(PK_SC_MOVE_UNIT);            
+		movePacket.write<uint16>(unitId);
+		movePacket.write<uint16>(playerId);
+
+		// 경로 개수 먼저 전송
+		movePacket.write<uint16>(static_cast<uint16>(path.size()));
+
+		// 경로 좌표 순서대로 전송
+		for (const Vector2& pos : path)
+		{
+			movePacket.write<Vector2>(pos);
+		}
+
+		uint16 packetSize = movePacket.size();
+		uint16 networkSize = htons(packetSize);
+		memcpy(movePacket.getBuffer().data(), &networkSize, sizeof(uint16_t));
+		broadcast(movePacket.getBuffer().data(), packetSize);
 	}
 }
 
@@ -278,7 +301,7 @@ void Game::waitingRoom(uint16_t id)
 	std::shared_ptr<Session> session = sessions[id];
 	session->doSend(waitingRoom.getBuffer().data(), totalSize);
 
-	Timer event{ id, std::chrono::system_clock::now() + 5s, TimerEvent::EV_GAME_START, 0 };
+	Timer event{ id, std::chrono::system_clock::now() + 2s, TimerEvent::EV_GAME_START, 0 };
 
 	//타이버 이벤트를 넣기 위한 뮤텍스 처리
 	std::lock_guard<std::mutex> lock(timer_mutex);
