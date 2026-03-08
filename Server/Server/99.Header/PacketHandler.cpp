@@ -29,6 +29,11 @@ void PacketHandler::handlePacket(char* buffer, uint16_t id, uint16 packetSize)
 		handleUnitSpawn(packet, id);
 		break;
 	}
+	case PK_CS_MOVE_UNIT:
+	{
+		handleUnitSpawn(packet, id);
+		break;
+	}
 
 	}
 
@@ -50,4 +55,19 @@ void PacketHandler::handleUnitSpawn(Packet& unitPacket, uint16_t id)
 	Vector2 spawnPos = unitPacket.read<Vector2>();
 
 	Game::get().spawnUnit(playerId, spawnPos);
+}
+
+void PacketHandler::handleUnitMove(Packet& unitMovePacket, uint16_t id)
+{
+	uint16_t playerId = unitMovePacket.read<uint16_t>();
+	Vector2 movePos = unitMovePacket.read<Vector2>();
+	uint16_t unitCount = unitMovePacket.read<uint16_t>();
+
+	for (int i = 0; i < unitCount; ++i)
+	{
+		uint16_t unitId = unitMovePacket.read<uint16_t>();
+
+		Game::get().moveUnit(playerId, unitId, movePos);
+	}
+
 }

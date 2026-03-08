@@ -14,7 +14,7 @@ public:
 
 public:
 	void addUnit(uint16 unitId, std::shared_ptr<Unit> unit);
-	
+	std::map<uint16, std::shared_ptr<Unit>> getUnits() { return _units; }
 private:
 	//std::shared_ptr<GameSession> _session;
 

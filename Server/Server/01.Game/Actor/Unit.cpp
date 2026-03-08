@@ -11,3 +11,9 @@ Unit::Unit(Vector2 pos, uint16 unitId, uint16 playerId)
 {
 	_hp = _maxHp;
 }
+
+std::vector<Node*> Unit::moveUnit(Vector2 goalPos)
+{
+	//Todo 길찾기 연결 
+	return std::vector<Node*>();
+}

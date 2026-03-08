@@ -89,6 +89,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="01.Game\Actor\Session.cpp" />
+    <ClCompile Include="01.Game\Container\Astar.cpp" />
     <ClCompile Include="01.Game\Game.cpp" />
     <ClCompile Include="01.Game\Actor\Player.cpp" />
     <ClCompile Include="02.Network\SeverCore.cpp" />
@@ -107,6 +108,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="01.Game\Actor\Session.h" />
+    <ClInclude Include="01.Game\Container\Astar.h" />
+    <ClInclude Include="01.Game\Container\Node.h" />
     <ClInclude Include="01.Game\Game.h" />
     <ClInclude Include="01.Game\Actor\Player.h" />
     <ClInclude Include="02.Network\OverlappedEx.h" />

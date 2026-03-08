@@ -8,5 +8,6 @@ public:
 private:
 	static void handleLogin(Packet& loginPacket, uint16_t id);
 	static void handleUnitSpawn(Packet& unitPacket, uint16_t id);
+	static void handleUnitMove(Packet& unitPacket, uint16_t id);
 };
 

@@ -4,6 +4,7 @@
 #include "01.Game/Actor/Session.h"
 #include "01.Game/Actor/Player.h"
 #include "99.Header/PacketHandler.h"
+#include "01.Game/Actor/Unit.h"
 
 Game* Game::_instance = nullptr;
 
@@ -142,10 +143,10 @@ void Game::loadMap()
 	delete[] data;
 
 
-	// 줄바꿈 제거
+	// 줄바꿈/공백 제거
 	mapStr.erase(std::remove(mapStr.begin(), mapStr.end(), '\r'), mapStr.end());
 	mapStr.erase(std::remove(mapStr.begin(), mapStr.end(), '\n'), mapStr.end());
-
+	mapStr.erase(std::remove(mapStr.begin(), mapStr.end(), ' '), mapStr.end());
 	// 맵 크기 검증
 	if (mapStr.size() < (size_t)(_width * _height))
 	{
@@ -190,15 +191,29 @@ void Game::loadMap()
 
 bool Game::isSpawnableUnit(uint16 playerId, Vector2 spawnPos)
 {
-	// 벽이면 생성 불가
 	int tileX = (int)spawnPos.x;
 	int tileY = (int)spawnPos.y;
-	if (_tiles[tileY * _width + tileX] == 1) return false;
+
+	//빈 공간만 허용
+	if (_tiles[tileY * _width + tileX] != 0) return false;
 
 	// 플레이어 1 → 왼쪽 절반
-	if (playerId == 0 && spawnPos.x < _width / 2) return true;
+	if (playerId == 5 && spawnPos.x < _width / 2) return true;
+
 	// 플레이어 2 → 오른쪽 절반
-	if (playerId == 1 && spawnPos.x >= _width / 2) return true;
+	if (playerId == 6 && spawnPos.x >= _width / 2) return true;
+}
+
+bool Game::isMovableUnit(uint16 playerId, Vector2 movePos)
+{
+	//Todo 움직일 수 있는 범위 넣기
+	int tileX = (int)movePos.x;
+	int tileY = (int)movePos.y;
+
+	//빈 공간만 허용
+	if (_tiles[tileY * _width + tileX] != 0) return false;
+
+	return true;
 }
 
 void Game::spawnUnit(uint16 playerId, Vector2 spawnPos)
@@ -207,7 +222,12 @@ void Game::spawnUnit(uint16 playerId, Vector2 spawnPos)
 		return;
 	uint16 unitId = getUnittId();
 	auto player = players[playerId];
-	player->addUnit(unitId, std::make_shared<Unit>(spawnPos, unitId, playerId));
+	auto unit = std::make_shared<Unit>(spawnPos, unitId, playerId);
+	unit->setMap(_tiles);
+	player->addUnit(unitId, unit);
+
+	//유닛 = 2
+	_tiles[spawnPos.y * _width + spawnPos.x] = playerId;
 
 	Packet unitPacket;
 	unitPacket.write<uint16>(0);
@@ -220,6 +240,23 @@ void Game::spawnUnit(uint16 playerId, Vector2 spawnPos)
 	memcpy(unitPacket.getBuffer().data(), &networkSize, sizeof(uint16_t));
 
 	broadcast(unitPacket.getBuffer().data(), packetSize);
+}
+
+void Game::moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos)
+{
+	if (!isMovableUnit(unitId, movePos))
+	{
+		return;
+	}
+	auto player = players[playerId];
+	auto units = player->getUnits();
+	auto unit = units.find(unitId)->second;
+
+	//Todo a* 이용한 길 찾기
+	if (unit)
+	{
+		unit->moveUnit(movePos);
+	}
 }
 
 void Game::waitingRoom(uint16_t id)

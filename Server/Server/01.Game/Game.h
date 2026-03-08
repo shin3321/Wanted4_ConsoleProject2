@@ -36,9 +36,11 @@ public:
 
 	//유닛을 생성할 수 있는 곳인지 판단하는 함수
 	bool isSpawnableUnit(uint16 playerId, Vector2 spawnPos);
+	bool isMovableUnit(uint16 playerId, Vector2 movePos);
 
 	//유닛을 생성하는 함수
 	void spawnUnit(uint16 playerId, Vector2 spawnPos);
+	void moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos);
 
 	//setter,getter
 	//아이디에 맞는 세션을 반환	
@@ -53,7 +55,7 @@ private:
 	static Game* _instance;
 
 	//클라이언트 아이디
-	std::atomic<uint16> _clientId = 0;
+	std::atomic<uint16> _clientId = 5;
 
 	//unitId
 	std::atomic<uint16> _unitId = 10;
@@ -64,7 +66,7 @@ private:
 private:
 	//맵 너비, 높이
 	uint16_t _width = 256;
-	uint16_t _height = 100;
+	uint16_t _height = 95;
 	std::vector<uint8_t> _tiles;
 
 private:
