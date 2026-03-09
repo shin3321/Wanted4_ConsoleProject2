@@ -1,7 +1,15 @@
 ﻿#pragma once
+#include "01.Game/QuadTree/QuadTree.h"
+#include <set>
 class Player;
 class Session;
 //class Unit;
+
+// 공격 이벤트를 모아서 한 번에 처리
+struct AttackEvent {
+	Unit* attacker;
+	Unit* target;
+};
 
 class Game
 {
@@ -23,9 +31,6 @@ public:
 	uint16 getClientId();
 	uint16 getUnittId();
 
-	//맵 생성
-	void MapLoad();
-
 	//closeSocket 함수 - 플레이어의 소켓을 닫는 함수
 	void closeSocket(int sessioneId);
 	void broadcast(const char* data, uint16 packetSize);
@@ -40,8 +45,16 @@ public:
 
 	//유닛을 생성하는 함수
 	void spawnUnit(uint16 playerId, Vector2 spawnPos);
+	void addUnit(std::shared_ptr<Unit> unit);
+	void removeUnit(uint16 unitId, uint16 playerId);
 	void moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos);
+	std::shared_ptr<Unit> findUnit(uint16 unitId);
 
+	//트리 리빌드 함수
+	void rebuild();
+	void attackUnit();
+	void attackedUnit(std::vector<uint16> attackedUnits);
+	
 	//setter,getter
 	//아이디에 맞는 세션을 반환	
 	void setPlayer(std::shared_ptr<Player> player, uint16_t playerId);
@@ -55,7 +68,7 @@ private:
 	static Game* _instance;
 
 	//클라이언트 아이디
-	std::atomic<uint16> _clientId = 5;
+	std::atomic<uint16> _clientId = 4;
 
 	//unitId
 	std::atomic<uint16> _unitId = 10;
@@ -66,13 +79,27 @@ private:
 private:
 	//맵 너비, 높이
 	uint16_t _width = 256;
-	uint16_t _height = 96;
+	uint16_t _height = 98;
+
 	std::vector<uint8_t> _tiles;
+	std::mutex _tileLock;
 
 private:
 	std::map<uint16, std::shared_ptr<Session>> sessions;
 	std::map<uint16, std::shared_ptr<Player>> players;
 
+	std::unordered_set<uint16> _moveUnits;
+	std::unique_ptr<QuadTree> _tree;
+	std::mutex _treeLock;
+
+	Rect _mapBoundary;
+	int _capacity = 4;
+
+	std::vector<AttackEvent> events;
+	std::set<std::pair<int, int>> processed;
+
+	std::mutex _unitsLock;
+	std::map<uint16, std::shared_ptr<Unit>> _units;
 	//std::unordered_map<uint16, std::shared_ptr<Unit>> _player2Units;
 };
 

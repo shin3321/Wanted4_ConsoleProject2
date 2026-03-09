@@ -66,7 +66,6 @@ private:
 	//열린 리스트 (방문할 노드)
 	std::vector<Node*> _openList;
 
-	//닫힌 리스트 (방문한 노드)
 	std::vector<Node*> _closedList;
 
 	//시작 노드

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Level\Level.h"
+#include "Level\ManageLevel.h"
 #include "Math/Color.h"
 
 #include <string>
@@ -7,9 +7,9 @@
 using namespace Wanted;
 constexpr int MAX_ID_LENGTH = 15;
 
-class LoginLevel : public Level
+class LoginLevel : public ManageLevel
 {
-	RTTI_DECLARATIONS(LoginLevel, Level)
+	RTTI_DECLARATIONS(LoginLevel, ManageLevel)
 
 public:
 	LoginLevel();

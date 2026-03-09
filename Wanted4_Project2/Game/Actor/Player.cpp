@@ -38,7 +38,7 @@ void Player::Tick(float deltaTime)
 		QuitGame();
 	}
 
-	// 왼쪽 클릭 -> 선택된 유닛 보내기
+	// 왼쪽 클릭 
 	if (Input::Get().GetMouseButtonDown(0))
 	{
 		UpdateDragSelection(Input::Get().MousePosition());
@@ -124,8 +124,8 @@ void Player::MoveUnit(Vector2 mousePos)
 	unitMovePacket.write<uint16_t>(PK_CS_MOVE_UNIT);
 	unitMovePacket.write<uint16_t>(_id);
 	unitMovePacket.write<Vector2>(mousePos);
-
 	unitMovePacket.write<uint16_t>(static_cast<uint16_t>(_selectedUnitIds.size()));
+
 	for (uint16_t unitId : _selectedUnitIds)
 	{
 		unitMovePacket.write<uint16_t>(unitId);
@@ -135,6 +135,7 @@ void Player::MoveUnit(Vector2 mousePos)
 	memcpy(&unitMovePacket.getBuffer()[0], &networkSize, sizeof(uint16_t));
 
 	_networker->DoSend(unitMovePacket.getBuffer().data(), packetSize);
+	_selectedUnitIds.clear();
 }
 
 void Player::RenderDragBox()
@@ -144,7 +145,7 @@ void Player::RenderDragBox()
 	maxX = (std::max)(_dragStart.x, _dragEnd.x);
 	maxY = (std::max)(_dragStart.y, _dragEnd.y);
 
-	for (int x = minX; x < maxX; ++x)
+	for (int x = minX; x <= maxX; ++x)
 	{
 		for (int y = minY; y <= maxY; ++y)
 		{

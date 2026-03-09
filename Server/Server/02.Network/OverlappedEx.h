@@ -6,6 +6,7 @@ enum class OP_TYPE
 	RECV,
 	SEND,
 	GAME_START,
+	UNIT_ATTACK,
 
 };
 

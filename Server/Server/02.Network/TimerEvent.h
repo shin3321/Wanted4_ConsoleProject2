@@ -7,7 +7,7 @@ using namespace std::chrono_literals;
 enum class TimerEvent
 {
 	EV_GAME_START = 1,
-	//Todo 입력 막기 /풀기
+	EV_UNIT_ATTACK, 
 };
 
 struct Timer

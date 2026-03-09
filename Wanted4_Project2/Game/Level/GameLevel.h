@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Level\Level.h"
+#include "Level\ManageLevel.h"
 #include "Math/Color.h"
 #include "Utils/Timer.h"
 
@@ -7,9 +7,9 @@
 
 using namespace Wanted;
 
-class GameLevel : public Level
+class GameLevel : public ManageLevel
 {
-	RTTI_DECLARATIONS(GameLevel, Level)
+	RTTI_DECLARATIONS(GameLevel, ManageLevel)
 
 public:
 	GameLevel();

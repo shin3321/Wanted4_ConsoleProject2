@@ -69,5 +69,5 @@ void PacketHandler::handleUnitMove(Packet& unitMovePacket, uint16_t id)
 
 		Game::get().moveUnit(playerId, unitId, movePos);
 	}
-
+	Game::get().attackUnit();
 }

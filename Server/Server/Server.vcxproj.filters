@@ -48,7 +48,10 @@
     <ClCompile Include="02.Network\TimerEvent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="01.Game\Container\Astar.cpp">
+    <ClCompile Include="01.Game\AStar\Astar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="01.Game\QuadTree\QuadTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -101,10 +104,19 @@
     <ClInclude Include="99.Header\Vector2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="01.Game\Container\Node.h">
+    <ClInclude Include="01.Game\AStar\Node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="01.Game\Container\Astar.h">
+    <ClInclude Include="01.Game\AStar\Astar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="01.Game\QuadTree\QuadTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="01.Game\QuadTree\Bound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="01.Game\QuadTree\Rectangle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -34,7 +34,7 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 
 	// 대각선 이동 비용 상수.
 	const float diagonalCost = 1.5;
-	
+
 	//시작 노드를 열린 리스트에 추가
 	_openList.emplace_back(_startNode);
 
@@ -62,6 +62,7 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 
 		//fcost가 가장 낮은 노드를 현재 노드로 설정
 		Node* currentNode = lowestNode;
+		//ClosedNode = currentNode;
 
 		//현재 노드가 목적지면 경로 보내기
 		if (isDestination(currentNode))
@@ -73,7 +74,6 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 		}
 
 		//방문 처리를 위해 현재 노드를 열린 리스트에서 제거
-
 		for (int i = 0; i < static_cast<int>(_openList.size()); ++i)
 		{
 			if (_openList[i] == currentNode)
@@ -99,7 +99,7 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 			}
 
 			//이동할 위치가 장애물인 경우에는 무시
-			if ((*_mapData)[newY * MAP_WIDTH + newX] == 1)
+			if ((*_mapData)[newY * MAP_WIDTH + newX] != 0)
 			{
 				continue;
 			}
@@ -142,6 +142,7 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 					break;
 				}
 			}
+
 			if (openListNode != nullptr)
 			{
 				//이웃 노드가 열린 리스트에 있으면 더 좋은 경로인 경우 비용만 갱신
@@ -170,9 +171,20 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 		}
 	}
 	// 경로 못 찾은 경우
+
+	Node* ClosedNode = _closedList[0];
+	for (int i = 0; i < _closedList.size(); ++i)
+	{
+		if (_closedList[i]->_hCost < ClosedNode->_hCost)
+		{
+			ClosedNode = _closedList[i];
+		}
+	}
+
+	std::vector<Vector2> path = constructPath(ClosedNode);
 	clearLists();
 	SafeDelete(_goalNode);
-	return {};
+	return path;
 }
 
 void AStar::setMapData(std::vector<uint8>& mamData)

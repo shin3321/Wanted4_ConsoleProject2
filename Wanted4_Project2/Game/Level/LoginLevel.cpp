@@ -21,15 +21,9 @@ LoginLevel::~LoginLevel()
 
 void LoginLevel::Tick(float deltaTime)
 {
-	UpdateId();
 	super::Tick(deltaTime);
 
-	// 종료 처리.
-	if (Input::Get().GetKeyDown(VK_ESCAPE))
-	{
-		// 게임 종료.
-		Engine::Get().QuitEngine();
-	}
+	UpdateId();
 }
 
 void LoginLevel::Draw()

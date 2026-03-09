@@ -1,6 +1,7 @@
 ﻿#include "Session.h"
 #include "Header/Packet.h"
 #include "Network/PacketHandler.h"
+#include "Network/PacketQueue.h"
 #include "Actor/Player.h"
 #include <iostream>
 
@@ -57,8 +58,13 @@ void Session::DoRecv()
 				}
 				std::vector<char> packetData(packetSize);
 				_ringBuffer.read(packetData.data(), packetSize); // read가 내부에서 head를 옮김
+				
+				std::shared_ptr<Packet> packet = std::make_shared<Packet>();
 
-				PacketHandler::HandlePacket(packetData.data(), packetSize);
+				packet->getBuffer().assign(packetData.data(), packetData.data() + packetSize);
+				PacketQueue::Get().PushQueue(packet);
+
+				//PacketHandler::HandlePacket(packetData.data(), packetSize);
 			}
 		}
 		else if (result == 0)

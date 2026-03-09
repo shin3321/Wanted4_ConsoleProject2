@@ -14,7 +14,7 @@ public:
 	}
 
 	Node(Vector2 pos, Node* parentNode = nullptr)
-		:_pos(pos), _gCost(0), _hCost(0), _fCost(0), parentNode(nullptr)
+		:_pos(pos), _gCost(0), _hCost(0), _fCost(0), parentNode(parentNode)
 	{
 	}
 

@@ -4,34 +4,44 @@
 #include "Actor/Npc.h"
 
 
-void PacketHandler::HandlePacket(char* buffer, uint16_t packetSize)
+void PacketHandler::HandlePacket(Packet& packet)
 {
-	Packet Packet;
+	//Packet Packet;
 
-	Packet.getBuffer().assign(buffer, buffer + packetSize);
-	uint16_t totalSize = Packet.read<uint16_t>();   // 전체 크기
-	uint16_t packetId = Packet.read<uint16_t>();   // 패킷 타임
+	//Packet.getBuffer().assign(buffer, buffer + packetSize);
+	uint16_t totalSize = packet.read<uint16_t>();   // 전체 크기
+	uint16_t packetId = packet.read<uint16_t>();   // 패킷 타임
 
 	switch (packetId)
 	{
 	case PK_SC_WAITING:
 	{
-		handleLogin(Packet);
+		handleLogin(packet);
 		break;
 	}
 	case PK_SC_GAME_START:
 	{
-		handleStartGame(Packet);
+		handleStartGame(packet);
 		break;
 	}
 	case PK_SC_SPAWN_UNIT:
 	{
-		handleSpawnUnit(Packet);
+		handleSpawnUnit(packet);
 		break;
 	}
 	case PK_SC_MOVE_UNIT:
 	{
-		handleMoveUnit(Packet);
+		handleMoveUnit(packet);
+		break;
+	}
+	case PK_SC_ATTACK_UNIT:
+	{
+		handleAttackedUnit(packet);
+		break;
+	}
+	case PK_SC_DESPAWN_UNIT:
+	{
+		handleAttackedUnit(packet);
 		break;
 	}
 	}
@@ -93,5 +103,23 @@ void PacketHandler::handleMoveUnit(Packet& unitMovePacket)
 	}
 
 	//Todo 유닛 이동 로직 작성
+	Game::Get().UnitMove(unitId, path);
+}
+
+void PacketHandler::handleAttackedUnit(Packet& unitAttackedPacket)
+{
+	uint16_t unitCount = unitAttackedPacket.read<uint16_t>(); // 경로 개수 먼저 읽기
+	std::vector<uint16_t> attackedUnitsId;
+	for (int i = 0; i < unitCount; ++i)
+	{
+		uint16_t unitId = unitAttackedPacket.read<uint16_t>(); 
+		attackedUnitsId.push_back(unitId);
+	}
+	Game::Get().UnitAttacked(attackedUnitsId);
+}
+
+void PacketHandler::handleDespawnUnit(Packet& unitDespawnPacket)
+{
+	uint16_t unitId = unitDespawnPacket.read<uint16_t>();
 
 }

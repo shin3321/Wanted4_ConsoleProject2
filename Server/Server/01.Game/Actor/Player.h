@@ -13,13 +13,13 @@ public:
 	Player(std::string nickname);
 
 public:
-	void addUnit(uint16 unitId, std::shared_ptr<Unit> unit);
-	std::map<uint16, std::shared_ptr<Unit>> getUnits() { return _units; }
+	bool addUnit();
+	void subUnit();
+	//	std::map<uint16, std::shared_ptr<Unit>> getUnits() { return _units; }
 private:
 	//std::shared_ptr<GameSession> _session;
-
 	std::string _nickname;
-
-	std::map<uint16, std::shared_ptr<Unit>> _units;
+	bool _isFull = false;
+	std::atomic<uint16> _unitCount = 0;
 };
 

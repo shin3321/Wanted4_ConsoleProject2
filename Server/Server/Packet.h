@@ -7,6 +7,8 @@ constexpr uint16 PK_SC_GAME_START = 4;
 
 constexpr uint16 PK_SC_SPAWN_UNIT = 5;
 constexpr uint16 PK_CS_SPAWN_UNIT = 6;
+constexpr uint16 PK_SC_ATTACK_UNIT= 9;
+constexpr uint16 PK_SC_DESPAWN_UNIT = 10;
 
 constexpr uint16 PK_SC_MOVE_UNIT = 7;
 constexpr uint16 PK_CS_MOVE_UNIT = 8;

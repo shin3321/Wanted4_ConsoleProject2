@@ -101,6 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Actor\BubblePopEffect.cpp" />
+    <ClCompile Include="Actor\Castle.cpp" />
     <ClCompile Include="Actor\NPC.cpp" />
     <ClCompile Include="Actor\Player.cpp" />
     <ClCompile Include="Actor\StunEffect.cpp" />
@@ -113,13 +114,16 @@
     <ClCompile Include="Level\WaitingRoomLevel.cpp" />
     <ClCompile Include="Level\LoginLevel.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Level\ManageLevel.cpp" />
     <ClCompile Include="Network\Network.cpp" />
     <ClCompile Include="Network\PacketHandler.cpp" />
+    <ClCompile Include="Network\PacketQueue.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Utils\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor\BubblePopEffect.h" />
+    <ClInclude Include="Actor\Castle.h" />
     <ClInclude Include="Actor\NPC.h" />
     <ClInclude Include="Actor\Player.h" />
     <ClInclude Include="Actor\StunEffect.h" />
@@ -130,11 +134,13 @@
     <ClInclude Include="Level\EndingLevel.h" />
     <ClInclude Include="Level\GameLevel.h" />
     <ClInclude Include="Level\LoginLevel.h" />
+    <ClInclude Include="Level\ManageLevel.h" />
     <ClInclude Include="Network\INetwork.h" />
     <ClInclude Include="Level\Game.h" />
     <ClInclude Include="Level\WaitingRoomLevel.h" />
     <ClInclude Include="Network\Network.h" />
     <ClInclude Include="Network\PacketHandler.h" />
+    <ClInclude Include="Network\PacketQueue.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Utils\Timer.h" />
   </ItemGroup>

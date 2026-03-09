@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include "Actor\Actor.h"
 #include "Utils/Timer.h"
+
 #include <iostream>
+#include <vector>
 
 using namespace Wanted;
 
@@ -9,29 +11,63 @@ class Unit : public Actor
 {
 	RTTI_DECLARATIONS(Unit, Actor)
 
-public:  
-    Unit();
-    Unit(Vector2 pos, uint16_t ownerId);
-    Unit(Vector2 pos, Color color);
-    ~Unit();
+public:
+	struct DamageFrame {
+		const char* frame;
+		float playTime;
+		Color color;
 
-    void Select();
-    void Unselect();
+		DamageFrame(const char* f, float t, Color c)
+			: frame(f), playTime(t), color(c) {
+		}
+	};
 
-    uint16_t _id;
-    uint16_t _ownerId = -1;
+	Unit();
+	Unit(Vector2 pos, uint16_t ownerId);
+	Unit(Vector2 pos, Color color);
+	~Unit();
 
-    //위치
-    Vector2 _pos;
+	virtual void Tick(float deltaTime);
 
-    //// 체력 (HP바 표시용)
-    //int _hp;
-    //int _maxHp;
+	void MoveUnit(std::vector<Vector2> path);
+	void move();
+	void Select();
+	void Unselect();
 
-    // 선택 여부 (드래그 선택)
-    bool _isSelected = false;
+	//애니메이션 관련 함수
+	void PlayDamageAnim();
+	void UpdateDamageAnim(float deltaTime);
+	void StopDamageAnim();
 
-    // 렌더링
-  //  char _symbol = 'O';     // 내 유닛
+	uint16_t _id;
+	uint16_t _ownerId = -1;
+
+	//위치
+	Vector2 _pos;
+	Color _color;
+
+	//// 체력 (HP바 표시용)
+	//int _hp;
+	//int _maxHp;
+
+	// 선택 여부 (드래그 선택)
+	bool _isSelected = false;
+
+	Timer _timer;
+	float _moveTimer = 0.05f;
+	bool _isMoving = true;
+	
+	std::vector<Vector2> _path = {};
+	int _pathIndex = 0;
+
+	// --- 데미지 애니메이션 관련 변수 ---
+	bool _isDamaged = false;        // 현재 데미지를 받은 상태인가?
+	Timer _damagedTimer;               // 타이머
+	int _damagedIndex = 0;             // 현재 프레임 인덱스
+
+
+	// 모든 NPC가 공유하는 데이터이므로 static const로 선언
+	static const DamageFrame _DamagedSequence[];
+	static const int _DamagedSequenceCount;
 };
 

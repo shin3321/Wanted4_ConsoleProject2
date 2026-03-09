@@ -9,11 +9,13 @@
 #include <memory>
 #include <string>
 
+
 using namespace Wanted;
 class Player;
 class Session;
 class Unit;
 //레벨 관리에 사용할 열거형
+
 enum class State
 {
 	//None = -1, 이것도 많이 씀
@@ -35,9 +37,13 @@ public:
 	
 	//game seesion과 network 통신 session을 연결하는 함수
 	void SetSession(const std::shared_ptr<Session> session);
-	void GameLevelStart(int width, int height, std::vector<uint8_t> tiles);
+	//void GameLevelStart(int width, int height, std::vector<uint8_t> tiles);
 
 	void UnitSpawn(uint16_t unitId, uint16_t playerId, Vector2 spawnPos);
+	void UnitMove(uint16_t unitId, std::vector<Vector2> path);
+	void UnitAttacked(std::vector<uint16_t> unitsId);
+	void UnitDespawn(uint16_t unitId);
+
 	//아이디 패킷 전송?
 	void SendId(const std::string id);
 
@@ -45,6 +51,8 @@ public:
 	std::shared_ptr<Session>& getMySesseion() { return mySession; }
 
 	std::unordered_map<uint16_t, std::shared_ptr<Unit>>& GetUnits() { return _units; }
+
+
 
 	//싱글톤을 위한 겟 함수
 	static Game& Get();

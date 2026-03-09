@@ -1,6 +1,7 @@
 ﻿#include "Network.h"
 #include "Level/Game.h"
 #include "Network/Session.h"
+#include "Network/PacketQueue.h"
 constexpr short GAME_PORT = 9999;
 
 Network* Network::_instance = nullptr;
