@@ -188,6 +188,7 @@ void SeverCore::runWorkThread()
 		{
 			//쿼드 트리
 			Game::get().attackUnit();
+			Game::get().attackCastle();
 			break;
 		}
 

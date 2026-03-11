@@ -1,12 +1,14 @@
 ﻿#include "pch.h"
 #include "Game.h"
 #include "01.Game/Actor/GameSession.h"
+#include "99.Header/PacketHandler.h"
 #include "01.Game/Actor/Session.h"
 #include "01.Game/Actor/Player.h"
-#include "99.Header/PacketHandler.h"
+#include "01.Game/Actor/Castle.h"
 #include "01.Game/Actor/Unit.h"
 
 #include <cmath>
+#include <fstream>
 
 Game* Game::_instance = nullptr;
 
@@ -30,7 +32,6 @@ void Game::init(HANDLE iocpHandle, OverlappedExPool& overlappedPool)
 
 void Game::accept(SOCKET socket)
 {
-	std::cout << "accept\n";
 
 	int newId = getClientId();
 	auto newSession = std::make_shared<Session>(*_overlappedPool);
@@ -48,9 +49,6 @@ void Game::accept(SOCKET socket)
 
 void Game::recv(uint16_t key, uint16_t numbytes)
 {
-	std::cout << "recv called - key: " << key
-		<< " bytes: " << numbytes << "\n";
-
 	//받은 세션 아이디 확인
 	std::shared_ptr<Session> session = sessions[key];
 	if (!session)
@@ -114,77 +112,69 @@ void Game::closeSocket(int sessioneId)
 	closesocket(session->_socket);
 }
 
+void Game::waitingRoom(uint16 id)
+{
+	if (players.size() == 2)
+	{
+		// 2명이면 3초 뒤에 게임 시작 모두에게 보냄
+		Timer event{ id, std::chrono::system_clock::now() + 2s, TimerEvent::EV_GAME_START, 0 };
+
+		//타이버 이벤트를 넣기 위한 뮤텍스 처리
+		std::lock_guard<std::mutex> lock(timer_mutex);
+		timer_queue.push(event);
+		timer_cv.notify_one();
+	}
+
+	Packet waitingRoom;
+	waitingRoom.write<uint16_t>(0);
+	waitingRoom.write<uint16_t>(PK_SC_WAITING);
+	waitingRoom.write<uint16_t>(id);
+	uint16_t totalSize = static_cast<uint16_t>(waitingRoom.getBuffer().size());
+	uint16_t networkSize = htons(totalSize);
+	memcpy(&waitingRoom.getBuffer()[0], &networkSize, sizeof(uint16_t));
+
+	std::shared_ptr<Session> session = sessions[id];
+	session->doSend(waitingRoom.getBuffer().data(), totalSize);
+}
+
 void Game::loadMap()
 {
-	char path[2048] = {};
-	sprintf_s(path, 2048, "C:\\Wanted4_game\\Project\\Server\\Asset\\map.txt");
+	std::ifstream file("C:\\Wanted4_game\\Project\\Server\\Asset\\map.txt");
+	std::string line;
+	std::string validMapData = "";
+	int rowCount = 0;
 
-	//파일 열기
-	FILE* file = nullptr;
-	fopen_s(&file, path, "rt");
+	while (std::getline(file, line)) {
+		// 공백 제거
+		line.erase(std::remove(line.begin(), line.end(), ' '), line.end());
+		line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
 
-	//예외 처리
-	if (!file)
-	{
-		//표준 오류 콘솔 활용
-		std::cerr << "Failed to open  map file.\n";
-		//.디버그 모드엣 ㅓ중단점으로 중단해 줌
-		__debugbreak();
+		if (line.empty()) continue;
+
+		// 파일의 한 줄이 설정된 _width보다 길거나 짧을 경우에 대한 예외 처리
+		if (line.size() > (size_t)_width) line = line.substr(0, _width);
+
+		validMapData += line;
+		rowCount++;
+		if (rowCount >= _height) break;
 	}
-
-	fseek(file, 0, SEEK_END);
-	size_t fileSize = ftell(file);
-	rewind(file);
-
-	//파일 데이터를 읽어올 버퍼 생성
-	char* data = new char[fileSize + 1];
-	size_t readSize = fread(data, sizeof(char), fileSize, file);
-	data[readSize] = '\0';
-	fclose(file);
-
-	//맵 데이터 파싱 및 서버 저장
-	std::string mapStr(data);
-	delete[] data;
-
-
-	// 줄바꿈/공백 제거
-	mapStr.erase(std::remove(mapStr.begin(), mapStr.end(), '\r'), mapStr.end());
-	mapStr.erase(std::remove(mapStr.begin(), mapStr.end(), '\n'), mapStr.end());
-	mapStr.erase(std::remove(mapStr.begin(), mapStr.end(), ' '), mapStr.end());
-
-	// 맵 크기 검증
-	if (mapStr.size() < (size_t)(_width * _height))
-	{
-		std::cerr << "Map data size mismatch!\n";
-		__debugbreak();
+	_tiles.assign(_width * _height, 0);
+	// 비트 패킹 로직 (기존과 동일하되 validMapData 사용)
+	std::vector<uint8_t> packedData((_width * _height + 7) / 8, 0);
+	for (int i = 0; i < _width * _height; ++i) {
+		if (i < validMapData.size() && validMapData[i] == '1') {
+			_tiles[i] = 1;
+			int byteIdx = i / 8;
+			int bitIdx = i % 8;
+			packedData[byteIdx] |= (1 << bitIdx);
+		}
 	}
-
 	Packet mapPacket;
+
 	mapPacket.write<uint16_t>(0);
 	mapPacket.write<uint16_t>(PK_SC_GAME_START);
 	mapPacket.write<uint16_t>(_width);
 	mapPacket.write<uint16_t>(_height);
-
-	int j = 0;
-	int k = 0;
-
-	// 가로 WIDTH, 세로 HEIGHT 크기로 초기화
-	std::vector<uint8_t> packedData((_width * _height + 7) / 8, 0);
-	_tiles.assign(_width * _height, 0);
-
-	for (int i = 0; i < _width * _height; ++i)
-	{
-		int byteIdx = i / 8;
-		int bitIdx = i % 8;
-
-		// 타일이 '1'(벽)이면 해당 비트를 1로 셋팅
-		if (mapStr[i] == '1')
-		{
-			_tiles[i] = 1;
-			packedData[byteIdx] |= (1 << bitIdx);
-		}
-	}
-
 	// 이후 packedData를 mapPacket에 write
 	mapPacket.writeBuffer(packedData.data(), packedData.size());
 
@@ -192,6 +182,51 @@ void Game::loadMap()
 	uint16_t networkSize = htons(totalSize);
 	memcpy(&mapPacket.getBuffer()[0], &networkSize, sizeof(uint16_t));
 	broadcast(mapPacket.getBuffer().data(), totalSize);
+
+	sendCastle();
+}
+
+void Game::sendCastle()
+{
+	uint16 playerId = 0;
+	Vector2 castlePos;
+
+	for (auto player : players)
+	{
+		playerId = player.second->getId();
+		if (playerId == 5)
+		{
+			castlePos = castle1Pos;
+			//_tree->insert({ castlePos.x, castlePos.y, castle });
+		}
+		else
+		{
+			castlePos = castle2Pos;
+		}
+
+		_tiles[castlePos.y * _width + castlePos.x] = playerId;
+
+		Castle* castle = new Castle(castlePos, playerId);
+		_castles.try_emplace(playerId, castle);
+		Packet unitPacket;
+		unitPacket.write<uint16>(0);
+		unitPacket.write<uint16>(PK_SC_CASTLE);
+		unitPacket.write<uint16>(playerId);
+		unitPacket.write<Vector2>(castlePos);
+		uint16 packetSize = unitPacket.size();
+		uint16 networkSize = htons(packetSize);
+		memcpy(&unitPacket.getBuffer().data()[0], &networkSize, sizeof(uint16_t));
+
+		broadcast(unitPacket.getBuffer().data(), packetSize);
+	}
+}
+
+void Game::setUnitPosTiles(Vector2 newPos, Vector2 oldPos, uint16 unitId)
+{
+	_tileLock.lock();
+	_tiles[oldPos.y * _width + oldPos.x] = 0;
+	_tiles[newPos.y * _width + newPos.x] = unitId;
+	_tileLock.unlock();
 }
 
 bool Game::isSpawnableUnit(uint16 playerId, Vector2 spawnPos)
@@ -256,10 +291,9 @@ void Game::spawnUnit(uint16 playerId, Vector2 spawnPos)
 	unitPacket.write<Vector2>(spawnPos);
 	uint16 packetSize = unitPacket.size();
 	uint16 networkSize = htons(packetSize);
-	memcpy(unitPacket.getBuffer().data(), &networkSize, sizeof(uint16_t));
+	memcpy(&unitPacket.getBuffer().data()[0], &networkSize, sizeof(uint16_t));
 
 	broadcast(unitPacket.getBuffer().data(), packetSize);
-
 }
 
 void Game::addUnit(std::shared_ptr<Unit> unit)
@@ -285,7 +319,7 @@ void Game::removeUnit(uint16 unitId, uint16 playerId)
 
 	{
 		std::lock_guard<std::mutex> lock(_unitsLock);
-		auto unit = findUnit(unitId); 
+		auto unit = findUnit(unitId);
 		if (unit) {
 			_tiles[unit->_pos.y * _width + unit->_pos.x] = 0;
 		}
@@ -312,44 +346,32 @@ void Game::moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos)
 	{
 		std::vector<Vector2> path = unit->moveUnit(movePos);
 
-		if (path.empty())
-			return;
-		Vector2 goalPos = path.back();
-
-		_tileLock.lock();
-		_tiles[unit->_pos.y * _width + unit->_pos.x] = 0;
-		_tiles[goalPos.y * _width + goalPos.x] = unitId;
-		_tileLock.unlock();
-
-		unit->_pos = goalPos;
-
-		{
-			std::lock_guard<std::mutex>lock(_treeLock);
-			rebuild();
-		}
 		Packet movePacket;
 		movePacket.write<uint16>(0);
 		movePacket.write<uint16>(PK_SC_MOVE_UNIT);
 		movePacket.write<uint16>(unitId);
 		movePacket.write<uint16>(playerId);
 
-		// 경로 개수 먼저 전송
+		//경로 개수 먼저 전송
 		movePacket.write<uint16>(static_cast<uint16>(path.size()));
-
-		// 경로 좌표 순서대로 전송
 		for (const Vector2& pos : path)
 		{
 			movePacket.write<Vector2>(pos);
 		}
-
 		uint16 packetSize = movePacket.size();
 		uint16 networkSize = htons(packetSize);
 		memcpy(movePacket.getBuffer().data(), &networkSize, sizeof(uint16_t));
 		broadcast(movePacket.getBuffer().data(), packetSize);
-		std::cout << "MoveUnit " << unitId << "\n";
+
+		unit->_pos = movePos;
+
+		{
+			std::lock_guard<std::mutex>lock(_treeLock);
+			rebuild();
+		}
+
 		_moveUnits.insert(unitId);
 	}
-	//
 }
 
 std::shared_ptr<Unit> Game::findUnit(uint16 unitId)
@@ -389,6 +411,7 @@ void Game::attackUnit()
 		{
 			//같은 팀이면 넘김
 			if (other->_ownerId == unit->_ownerId) continue;
+			if (!other->_isAlive || !unit->_isAlive) continue;
 			int dx = other->_pos.x - unit->_pos.x;
 			int dy = other->_pos.y - unit->_pos.y;
 
@@ -400,34 +423,48 @@ void Game::attackUnit()
 				combatPairs.insert({ a, b });
 			}
 		}
-
 	}
-	std::vector<uint16> attakedUnits;
+
+	std::set<uint16> attackedUnits;
 	for (auto& [idA, idB] : combatPairs)
 	{
 		auto unitA = findUnit(idA);
 		auto unitB = findUnit(idB);
-		
-		if (!unitA || !unitB) return;
+
+		if (!unitA || !unitB) continue;
 
 		double dx = unitA->_pos.x - unitB->_pos.x;
 		double dy = unitA->_pos.y - unitB->_pos.y;
 		double distSq = dx * dx + dy * dy; // sqrt 없이 제곱으로 비교 (더 빠름)
 
-		// 각자 range 따로 체크
-		if (distSq <= unitA->_range * unitA->_range)
 		{
-			unitB->takeDamage(unitA->_attack);
-			attakedUnits.push_back(unitB->getId());
+			std::lock_guard<std::mutex> lock(_attackeUnitsLock);
+			// 각자 range 따로 체크
+			if (distSq <= unitA->_range * unitA->_range)
+			{
+				unitB->takeDamage(unitA->_attack);
+				attackedUnits.insert(unitB->getId());
+			}
+
+			if (distSq <= unitB->_range * unitB->_range)
+			{
+				unitA->takeDamage(unitB->_attack);
+				attackedUnits.insert(unitA->getId());
+			}
+
+			if (!attackedUnits.empty())
+			{
+				attackedUnit(attackedUnits);
+			}
 		}
 
-		if (distSq <= unitB->_range * unitB->_range)
+		// 타이머 이벤트 등록 (공격 쿨타임 관리)
 		{
-			unitA->takeDamage(unitB->_attack);
-			attakedUnits.push_back(unitA->getId());
-
+			std::lock_guard<std::mutex> lock(timer_mutex);
+			Timer event{ 0, std::chrono::system_clock::now() + 3s, TimerEvent::EV_UNIT_ATTACK, 0 };
+			timer_queue.push(event);
+			timer_cv.notify_one();
 		}
-		attackedUnit(attakedUnits);
 	}
 
 	Timer event{ 0, std::chrono::system_clock::now() + 3s, TimerEvent::EV_UNIT_ATTACK, 0 };
@@ -438,7 +475,7 @@ void Game::attackUnit()
 	timer_cv.notify_one();
 }
 
-void Game::attackedUnit(std::vector<uint16> attackedUnits)
+void Game::attackedUnit(std::set<uint16> attackedUnits)
 {
 	Packet attackedUnit;
 	attackedUnit.write<uint16>(0);
@@ -454,31 +491,44 @@ void Game::attackedUnit(std::vector<uint16> attackedUnits)
 	broadcast(attackedUnit.getBuffer().data(), packetSize);
 }
 
-void Game::waitingRoom(uint16_t id)
+void Game::attackCastle()
 {
-	if (sessions.size() == 2)
+	for (auto& [id, castle] : _castles)
 	{
-		//Todo 2명이면 3초 뒤에 게임 시작 모두에게 보냄
-	//	TimerEvent event{i}
+		std::vector<Unit*> nearby;
+		_tree->queryCircle(castle->_pos.x, castle->_pos.y, 3, nearby);
+
+		std::erase_if(nearby, [&](Unit* other) {
+			return other->_ownerId == castle->_ownerId;
+			});
+
+		uint16 attackAmount = nearby.size() * castle->_attack;
+		castle->attacked(attackAmount);
+
+		Packet castleAttacked;
+		castleAttacked.write<uint16>(0);
+		castleAttacked.write<uint16>(PK_SC_ATTACK_CASTLE);
+		castleAttacked.write<uint16>(id); //성 아이디
+		uint16 packetSize = castleAttacked.size();
+		uint16 totalSize = htons(packetSize);
+		memcpy(&castleAttacked.getBuffer()[0], &totalSize, sizeof(uint16));
+		broadcast(castleAttacked.getBuffer().data(), packetSize);
 	}
+}
 
-	Packet waitingRoom;
-	waitingRoom.write<uint16_t>(0);
-	waitingRoom.write<uint16_t>(PK_SC_WAITING);
-	waitingRoom.write<uint16_t>(id);
-	uint16_t totalSize = static_cast<uint16_t>(waitingRoom.getBuffer().size());
-	uint16_t networkSize = htons(totalSize);
-	memcpy(&waitingRoom.getBuffer()[0], &networkSize, sizeof(uint16_t));
+void Game::removeCastle(uint16 castleId, uint16 playerId)
+{
+	Packet despawnUnit;
+	despawnUnit.write<uint16>(0);
+	despawnUnit.write<uint16>(PK_SC_DESTROY_CASTLE);
+	despawnUnit.write<uint16>(castleId);
+	uint16 packetSize = despawnUnit.size();
+	uint16 networkSize = htons(packetSize);
+	memcpy(despawnUnit.getBuffer().data(), &networkSize, sizeof(uint16_t));
+	broadcast(despawnUnit.getBuffer().data(), packetSize);
 
-	std::shared_ptr<Session> session = sessions[id];
-	session->doSend(waitingRoom.getBuffer().data(), totalSize);
-
-	Timer event{ id, std::chrono::system_clock::now() + 2s, TimerEvent::EV_GAME_START, 0 };
-
-	//타이버 이벤트를 넣기 위한 뮤텍스 처리
-	std::lock_guard<std::mutex> lock(timer_mutex);
-	timer_queue.push(event);
-	timer_cv.notify_one();
+	//	auto player = players[playerId];
+		//게임 판정
 }
 
 void Game::broadcast(const char* data, uint16 packetSize)
@@ -487,12 +537,12 @@ void Game::broadcast(const char* data, uint16 packetSize)
 	{
 		session.second->doSend(data, packetSize);
 	}
-
 }
 
 void Game::setPlayer(std::shared_ptr<Player> player, uint16_t playerId)
 {
 	players.try_emplace(playerId, player);
+	player->setId(playerId);
 }
 
 std::shared_ptr<Session> Game::getSession(uint16_t id)
@@ -510,4 +560,3 @@ Game& Game::get()
 	}
 	return *_instance;
 }
-

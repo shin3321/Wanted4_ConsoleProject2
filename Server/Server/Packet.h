@@ -4,11 +4,15 @@ constexpr uint16 PK_SC_MAP_LOAD = 1;
 constexpr uint16 PK_CS_ID = 2;
 constexpr uint16 PK_SC_WAITING = 3;
 constexpr uint16 PK_SC_GAME_START = 4;
+constexpr uint16 PK_SC_CASTLE = 11;
 
 constexpr uint16 PK_SC_SPAWN_UNIT = 5;
 constexpr uint16 PK_CS_SPAWN_UNIT = 6;
 constexpr uint16 PK_SC_ATTACK_UNIT= 9;
 constexpr uint16 PK_SC_DESPAWN_UNIT = 10;
+
+constexpr uint16 PK_SC_ATTACK_CASTLE = 12;
+constexpr uint16 PK_SC_DESTROY_CASTLE = 13;
 
 constexpr uint16 PK_SC_MOVE_UNIT = 7;
 constexpr uint16 PK_CS_MOVE_UNIT = 8;

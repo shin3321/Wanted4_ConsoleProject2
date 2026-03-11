@@ -1,5 +1,5 @@
 ﻿#include "Unit.h"
-
+#include "Render/Renderer.h"
 const Unit::DamageFrame Unit::_DamagedSequence[] =
 {
 	Unit::DamageFrame("U", 0.1f, Color::Green),
@@ -17,22 +17,23 @@ Unit::Unit()
 {
 }
 
-Unit::Unit(Vector2 pos, uint16_t ownerId)
+Unit::Unit(Vector2 pos, uint16_t unitId, uint16_t ownerId)
 	:super("U", pos, Color::Green)
 {
 	_pos = pos;
+	_id = unitId;
 	_ownerId = ownerId;
 	_color = Color::Green;
 	_timer.SetTargetTime(_moveTimer);
-
 }
 
-Unit::Unit(Vector2 pos, Color color)
+Unit::Unit(Vector2 pos, uint16_t unitId, Color color)
 	:super("U", pos, Color::Red)
 {
+	_id = unitId;
 	_pos = pos;
 	_color = Color::Red;
-
+	_timer.SetTargetTime(_moveTimer);
 }
 
 Unit::~Unit()
@@ -43,10 +44,10 @@ void Unit::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
 	if (_isMoving)
-		move();;
+		move();
 
 	_timer.Tick(deltaTime);
-	
+
 	if (_isDamaged)
 	{
 		UpdateDamageAnim(deltaTime);
@@ -61,6 +62,14 @@ void Unit::MoveUnit(std::vector<Vector2> path)
 	_timer.Reset();
 }
 
+void Unit::MoveUnit(Vector2 movePos)
+{
+	//_path.push(movePos);
+	_isMoving = true;
+	_timer.Reset();
+
+}
+
 void Unit::move()
 {
 	if (_timer.IsTimeOut())
@@ -68,14 +77,26 @@ void Unit::move()
 		if (_pathIndex < _path.size())
 		{
 			SetPosition(_pos);
+			//_pos = _path.front();
 			_pos = _path[_pathIndex];
 			_pathIndex++;
+			showMove();
+			//	_path.pop();
 			_timer.Reset();
 		}
 		else
 		{
 			_isMoving = false;
 		}
+	}
+}
+
+void Unit::showMove()
+{
+	for (uint16_t i = _pathIndex; i < _path.size(); ++i)
+	{
+		Renderer::Get().Submit(".", _path[i], Color::BackgroundBlue, 9);
+
 	}
 }
 

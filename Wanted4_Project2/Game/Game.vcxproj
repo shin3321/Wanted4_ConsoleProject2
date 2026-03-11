@@ -114,7 +114,6 @@
     <ClCompile Include="Level\WaitingRoomLevel.cpp" />
     <ClCompile Include="Level\LoginLevel.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Level\ManageLevel.cpp" />
     <ClCompile Include="Network\Network.cpp" />
     <ClCompile Include="Network\PacketHandler.cpp" />
     <ClCompile Include="Network\PacketQueue.cpp" />
@@ -134,7 +133,7 @@
     <ClInclude Include="Level\EndingLevel.h" />
     <ClInclude Include="Level\GameLevel.h" />
     <ClInclude Include="Level\LoginLevel.h" />
-    <ClInclude Include="Level\ManageLevel.h" />
+    <ClInclude Include="Level\ProcessPacket.h" />
     <ClInclude Include="Network\INetwork.h" />
     <ClInclude Include="Level\Game.h" />
     <ClInclude Include="Level\WaitingRoomLevel.h" />

@@ -19,7 +19,6 @@ private:
 	void subdivide();
 
 	bool insertChild(const Point& p);
-	void rebulid(QuadTree& tree, std::vector<Unit*>& allUnits);
 
 private:
 	Rect _boundary;

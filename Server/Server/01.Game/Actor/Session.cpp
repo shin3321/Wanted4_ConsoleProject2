@@ -11,8 +11,6 @@ void Session::doSend(const char* packet, uint16_t packetSize)
 	_sendOver = _overlappedPool->allocOver();
 	_sendOver->reset(packet, packetSize);
 
-	std::cout << "doSend, PacketSize: " << packetSize << "\n";
-
 	int ret = WSASend(_socket, &_sendOver->_wsaBuf, 1, nullptr, 0,&_sendOver->_overlapped, nullptr);
 
 	if (ret == SOCKET_ERROR)

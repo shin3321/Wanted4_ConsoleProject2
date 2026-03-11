@@ -1,9 +1,10 @@
 ﻿#include "pch.h"
 #include "Astar.h"
-
+#include "01.Game/Game.h"
 
 #include <cmath>
 #include <algorithm>
+
 AStar::AStar()
 	:_startNode(nullptr), _goalNode(nullptr)
 {
@@ -15,12 +16,13 @@ AStar::~AStar()
 	SafeDelete(_goalNode);
 }
 
-std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
+std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos, uint16 _id)
 {
 	clearLists();
 
 	Node* startGridNode = getNode(startPos);
 	Node* goalGridNode = getNode(goalPos);
+
 
 	if (!startGridNode || !goalGridNode || _mapData->empty())
 		return {};
@@ -31,7 +33,7 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 	_startNode->_gCost = 0;
 	_startNode->_hCost = calculateHeuristic(_startNode, _goalNode);
 	_startNode->_fCost = _startNode->_hCost;
-
+	Node* closestNode = _startNode;
 	// 대각선 이동 비용 상수.
 	const float diagonalCost = 1.5;
 
@@ -64,9 +66,12 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 		Node* currentNode = lowestNode;
 		//ClosedNode = currentNode;
 
+
 		//현재 노드가 목적지면 경로 보내기
 		if (isDestination(currentNode))
 		{
+
+			Game::get().setUnitPosTiles(currentNode->_pos, _startNode->_pos, _id);
 			std::vector<Vector2> path = constructPath(currentNode);
 			clearLists();
 			SafeDelete(_goalNode); // goalNode는 리스트 밖에 있으니 별도 삭제
@@ -85,6 +90,10 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 
 		//방문 처리를 위해 현재 노드를 닫힌 리스트에 추가
 		_closedList.emplace_back(currentNode);
+
+		if (currentNode->_hCost < closestNode->_hCost)
+			closestNode = currentNode;
+
 
 		//이웃노드 방문(탐색)
 		for (const Direction& direction : directions)
@@ -170,18 +179,39 @@ std::vector<Vector2> AStar::FindPath(Vector2 startPos, Vector2 goalPos)
 			_openList.emplace_back(neighborNode);
 		}
 	}
-	// 경로 못 찾은 경우
 
-	Node* ClosedNode = _closedList[0];
-	for (int i = 0; i < _closedList.size(); ++i)
+	//// 경로 못 찾은 경우 - 장애물이 아닌 노드 중 목적지에 가장 가까운 노드 탐색
+	//Node* ClosedNode = nullptr;
+
+	//for (int i = 0; i < _closedList.size(); ++i)
+	//{
+	//	// 장애물인 노드는 건너뜀
+	//	if ((*_mapData)[_closedList[i]->_pos.y * MAP_WIDTH + _closedList[i]->_pos.x] != 0)
+	//		continue;
+
+	//	if (ClosedNode == nullptr || _closedList[i]->_hCost < ClosedNode->_hCost)
+	//	{
+	//		ClosedNode = _closedList[i];
+	//	}
+	//}
+
+	//// 장애물이 아닌 노드가 하나도 없으면 이동 불가
+	//if (ClosedNode == nullptr)
+	//{
+	//	clearLists();
+	//	SafeDelete(_goalNode);
+	//	return {};
+	//}
+
+	if (closestNode == _startNode)
 	{
-		if (_closedList[i]->_hCost < ClosedNode->_hCost)
-		{
-			ClosedNode = _closedList[i];
-		}
+		clearLists();
+		SafeDelete(_goalNode);
+		return {}; // 시작점 외에 갈 곳이 없으면 취소
 	}
 
-	std::vector<Vector2> path = constructPath(ClosedNode);
+	std::vector<Vector2> path = constructPath(closestNode);
+	Game::get().setUnitPosTiles(closestNode->_pos, _startNode->_pos, _id);
 	clearLists();
 	SafeDelete(_goalNode);
 	return path;
@@ -219,7 +249,7 @@ void AStar::initGrid()
 		{
 			int idx = y * MAP_WIDTH + x;
 			_nodeGrid[idx]._pos = { x, y };
-			_nodeGrid[idx]._isWall = ((*_mapData)[idx] == 1);
+			_nodeGrid[idx]._isWall = ((*_mapData)[idx] != 0);
 		}
 }
 
@@ -289,7 +319,7 @@ bool AStar::hasVisited(int x, int y, float gCost)
 
 bool AStar::isDestination(const Node* node)
 {
-	return *node == *_goalNode;
+	return(*node == *_goalNode && (*_mapData)[node->_pos.y * MAP_WIDTH + node->_pos.x] == 0);
 }
 
 bool AStar::isMovable(int x, int y)

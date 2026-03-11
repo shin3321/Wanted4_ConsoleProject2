@@ -24,11 +24,11 @@ public:
 	virtual void DoRecv() override;
 
 	//setter
-	void SetMyPlayer(Player* player, uint16_t id);
+	void SetMyPlayer(std::shared_ptr<Player> player, uint16_t id);
 
 	//getter
 	int GetId() { return _id; }
-	Player* GetMyPlayer() { return _myPlayer; }
+	std::shared_ptr<Player> GetMyPlayer() { return _myPlayer; }
 
 private:
 	int _id;
@@ -41,5 +41,5 @@ private:
 	size_t _remainSize = 0;
 
 private:
-	Player* _myPlayer;
+	std::shared_ptr<Player> _myPlayer;
 };

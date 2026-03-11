@@ -14,7 +14,7 @@ Unit::Unit(Vector2 pos, uint16 unitId, uint16 playerId)
 
 std::vector<Vector2> Unit::moveUnit(Vector2 goalPos)
 {
-    _path = _aStar.FindPath(_pos, goalPos);
+    _path = _aStar.FindPath(_pos, goalPos, _id);
 
     if (_path.empty())
     {

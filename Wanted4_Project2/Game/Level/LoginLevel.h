@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Level\ManageLevel.h"
+#include "Level\Level.h"
 #include "Math/Color.h"
 
 #include <string>
@@ -7,9 +7,9 @@
 using namespace Wanted;
 constexpr int MAX_ID_LENGTH = 15;
 
-class LoginLevel : public ManageLevel
+class LoginLevel : public Level
 {
-	RTTI_DECLARATIONS(LoginLevel, ManageLevel)
+	RTTI_DECLARATIONS(LoginLevel, Level)
 
 public:
 	LoginLevel();
@@ -20,6 +20,7 @@ public:
 
 	void UpdateId();
 
+	bool _isRunnig = true;
 private:
 
 	std::string inputId = "";

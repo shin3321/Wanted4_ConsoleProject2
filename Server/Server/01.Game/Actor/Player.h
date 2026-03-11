@@ -16,8 +16,11 @@ public:
 	bool addUnit();
 	void subUnit();
 	//	std::map<uint16, std::shared_ptr<Unit>> getUnits() { return _units; }
+	void setId(uint16_t id) { _id = id; }
+	uint16 getId() { return _id; }
 private:
 	//std::shared_ptr<GameSession> _session;
+	uint16 _id;
 	std::string _nickname;
 	bool _isFull = false;
 	std::atomic<uint16> _unitCount = 0;

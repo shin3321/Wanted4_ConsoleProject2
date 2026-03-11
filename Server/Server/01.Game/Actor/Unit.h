@@ -31,7 +31,7 @@ public:
 	// 스탯
 	int _hp;
 	int _maxHp = 100;
-	int _attack = 5;
+	int _attack = 10;
 	int _range = 3;        // 공격 사거리
 
 	// 상태

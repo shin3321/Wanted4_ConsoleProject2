@@ -24,6 +24,7 @@ void RingBuffer::onWrite(size_t len)
 {
 	_tail = (_tail + len) % _capacity;
 }
+
 bool RingBuffer::write(const char* data, size_t len)
 
 {
@@ -48,10 +49,12 @@ bool RingBuffer::read(char* dest, size_t len)
 
 	for (size_t i = 0; i < len; ++i)
 	{
-		dest[i] = _buffer[_head];
+		if(dest)
+		{
+			dest[i] = _buffer[_head];
+		}
 		_head = (_head + 1) % _capacity;
 	}
-
 	return true;
 }
 
@@ -68,4 +71,3 @@ bool RingBuffer::peek(char* dest, size_t len)
 	}
 	return true;
 }
-

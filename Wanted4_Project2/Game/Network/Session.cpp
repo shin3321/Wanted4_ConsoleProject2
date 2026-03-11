@@ -56,12 +56,20 @@ void Session::DoRecv()
 					std::cout << "Invalid Packet size: " << packetSize;
 					break;
 				}
-				std::vector<char> packetData(packetSize);
-				_ringBuffer.read(packetData.data(), packetSize); // read가 내부에서 head를 옮김
-				
-				std::shared_ptr<Packet> packet = std::make_shared<Packet>();
+				uint16_t payloadSize = packetSize - sizeof(uint16_t);
+				std::vector<char> packetPayload(payloadSize);
 
-				packet->getBuffer().assign(packetData.data(), packetData.data() + packetSize);
+				_ringBuffer.read(nullptr, sizeof(uint16_t));
+				_ringBuffer.read(packetPayload.data(), payloadSize);
+				//std::vector<char> packetData(packetSize);
+				//_ringBuffer.read(packetData.data(), packetSize); // read가 내부에서 head를 옮김
+				//
+			//	std::shared_ptr<Packet> packet = std::make_shared<Packet>();
+
+				std::shared_ptr<Packet> packet = std::make_shared<Packet>();
+				packet->getBuffer().assign(packetPayload.begin(), packetPayload.end());
+
+				packet->getBuffer().assign(packetPayload.data(), packetPayload.data() + packetSize);
 				PacketQueue::Get().PushQueue(packet);
 
 				//PacketHandler::HandlePacket(packetData.data(), packetSize);
@@ -88,7 +96,7 @@ void Session::DoRecv()
 	}
 }
 
-void Session::SetMyPlayer(Player* player, uint16_t id)
+void Session::SetMyPlayer(std::shared_ptr<Player> player, uint16_t id)
 {
 	_myPlayer = player;
 	_id = _myPlayer->GetId();

@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <queue>
 
 using namespace Wanted;
 
@@ -23,14 +24,17 @@ public:
 	};
 
 	Unit();
-	Unit(Vector2 pos, uint16_t ownerId);
-	Unit(Vector2 pos, Color color);
+	Unit(Vector2 pos, uint16_t unitId ,uint16_t ownerId);
+	Unit(Vector2 pos, uint16_t unitId, Color color);
 	~Unit();
 
 	virtual void Tick(float deltaTime);
 
 	void MoveUnit(std::vector<Vector2> path);
+	void MoveUnit(Vector2 movePos);
 	void move();
+	void showMove();
+
 	void Select();
 	void Unselect();
 
@@ -57,6 +61,7 @@ public:
 	float _moveTimer = 0.05f;
 	bool _isMoving = true;
 	
+	//std::queue<Vector2> _path = {};
 	std::vector<Vector2> _path = {};
 	int _pathIndex = 0;
 

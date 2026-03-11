@@ -23,6 +23,7 @@ void LoginLevel::Tick(float deltaTime)
 {
 	super::Tick(deltaTime);
 
+	if(_isRunnig)
 	UpdateId();
 }
 
@@ -50,6 +51,8 @@ void LoginLevel::UpdateId()
 	//13 == enter
 	if (ch == 13)
 	{
+
+		_isRunnig = false;
 		Game::Get().SendId(inputId);
 	}
 	//8 == backspace

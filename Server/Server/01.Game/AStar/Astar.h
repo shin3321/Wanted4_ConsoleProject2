@@ -33,7 +33,7 @@ public:
 	~AStar();
 
 	//경로 검색 함수
-	std::vector<Vector2> FindPath(Vector2 starNode, Vector2 goalNode);
+	std::vector<Vector2> FindPath(Vector2 starNode, Vector2 goalNode, uint16 _id);
 
 	//맵 전달
 	void setMapData(std::vector<uint8>& mamData);
@@ -61,7 +61,15 @@ private:
 
 	bool isMovable(int x, int y);
 
+	//목적지를 예약하는 함수
+	Vector2 reserveTile(Vector2 goalPos, uint16 id);
+
+	//목적지가 이미 선점되어 있는지 확인하는 함수
+	bool isTileOccupied(int x, int y);
 private:
+
+	//예약할 때 거는 락
+	std::mutex _reservationMutex;
 
 	//열린 리스트 (방문할 노드)
 	std::vector<Node*> _openList;

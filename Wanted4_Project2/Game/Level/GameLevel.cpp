@@ -21,7 +21,8 @@ GameLevel::GameLevel(int width, int height, std::vector<uint8_t> tiles)
 		{
 			int i = (y * width) + x;
 			uint8_t type = tiles[i];
-			if (type == 1) AddNewActor(new Wall(position));
+			auto wall = std::make_shared<Wall>(position);
+			if (type == 1) AddNewActor(wall);
 			++position.x;
 		}
 		++position.y;

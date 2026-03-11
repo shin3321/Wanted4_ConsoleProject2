@@ -9,7 +9,7 @@ void PacketHandler::HandlePacket(Packet& packet)
 	//Packet Packet;
 
 	//Packet.getBuffer().assign(buffer, buffer + packetSize);
-	uint16_t totalSize = packet.read<uint16_t>();   // 전체 크기
+//	uint16_t totalSize = packet.read<uint16_t>();   // 전체 크기
 	uint16_t packetId = packet.read<uint16_t>();   // 패킷 타임
 
 	switch (packetId)
@@ -22,6 +22,11 @@ void PacketHandler::HandlePacket(Packet& packet)
 	case PK_SC_GAME_START:
 	{
 		handleStartGame(packet);
+		break;
+	}
+	case PK_SC_CASTLE:
+	{
+		handleConstructCastle(packet);
 		break;
 	}
 	case PK_SC_SPAWN_UNIT:
@@ -41,13 +46,23 @@ void PacketHandler::HandlePacket(Packet& packet)
 	}
 	case PK_SC_DESPAWN_UNIT:
 	{
-		handleAttackedUnit(packet);
+		handleDespawnUnit(packet);
+		break;
+	}
+	case PK_SC_ATTACK_CASTLE:
+	{
+		handleAttackedCastle(packet);
+		break;
+	}
+	case PK_SC_DESTROY_CASTLE:
+	{
+		handleDestroyCastle(packet);
 		break;
 	}
 	}
 }
 
-void PacketHandler::handleLogin (Packet& loginPacket)
+void PacketHandler::handleLogin(Packet& loginPacket)
 {
 	uint16_t playerId = loginPacket.read<uint16_t>();
 	Game::Get().WaitingRoom(playerId);
@@ -76,7 +91,6 @@ void PacketHandler::handleStartGame(Packet& mapPacket)
 		if (packedData[byteIdx] & (1 << bitIdx))
 			tiles[i] = 1;
 	}
-
 	Game::Get().GameStart(width, height, std::move(tiles));
 }
 
@@ -101,9 +115,11 @@ void PacketHandler::handleMoveUnit(Packet& unitMovePacket)
 		Vector2 pos = unitMovePacket.read<Vector2>();
 		path.push_back(pos);
 	}
+	//Vector2 movePos = unitMovePacket.read<Vector2>();
 
 	//Todo 유닛 이동 로직 작성
 	Game::Get().UnitMove(unitId, path);
+	//Game::Get().UnitMove(unitId, movePos);
 }
 
 void PacketHandler::handleAttackedUnit(Packet& unitAttackedPacket)
@@ -112,7 +128,7 @@ void PacketHandler::handleAttackedUnit(Packet& unitAttackedPacket)
 	std::vector<uint16_t> attackedUnitsId;
 	for (int i = 0; i < unitCount; ++i)
 	{
-		uint16_t unitId = unitAttackedPacket.read<uint16_t>(); 
+		uint16_t unitId = unitAttackedPacket.read<uint16_t>();
 		attackedUnitsId.push_back(unitId);
 	}
 	Game::Get().UnitAttacked(attackedUnitsId);
@@ -121,5 +137,28 @@ void PacketHandler::handleAttackedUnit(Packet& unitAttackedPacket)
 void PacketHandler::handleDespawnUnit(Packet& unitDespawnPacket)
 {
 	uint16_t unitId = unitDespawnPacket.read<uint16_t>();
+	Game::Get().UnitDespawn(unitId);
+}
+
+void PacketHandler::handleConstructCastle(Packet& castlePacket)
+{
+	uint16_t playerId = castlePacket.read<uint16_t>();
+	Vector2 castlePos = castlePacket.read<Vector2>();
+
+	Game::Get().ConstructCastle(castlePos, playerId);
+}
+
+void PacketHandler::handleAttackedCastle(Packet& castlePacket)
+{
+	uint16_t castleId = castlePacket.read<uint16_t>();
+
+	Game::Get().AttackedCastle(castleId);
+}
+
+void PacketHandler::handleDestroyCastle(Packet& castlePacket)
+{
+	uint16_t castleId = castlePacket.read<uint16_t>();
+
+	Game::Get().DestroyCastle(castleId);
 
 }

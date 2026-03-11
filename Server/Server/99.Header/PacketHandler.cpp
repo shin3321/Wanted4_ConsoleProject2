@@ -13,9 +13,6 @@ void PacketHandler::handlePacket(char* buffer, uint16_t id, uint16 packetSize)
 	uint16_t totalSize = packet.read<uint16_t>();   // 전체 크기
 	uint16_t packetId = packet.read<uint16_t>();   // 패킷 타임
 
-	
-	std::cout << "User " << id << "PacketType: " << packetId << "\n";
-
 	switch (packetId)
 	{
 	case PK_CS_ID:

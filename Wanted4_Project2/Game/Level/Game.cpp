@@ -8,6 +8,7 @@
 #include "Level/GameLevel.h"
 #include "Header/Packet.h"
 #include "Actor/Player.h"
+#include "Actor/Castle.h"
 #include "Actor/Unit.h"
 #include "Network/Session.h"
 
@@ -26,11 +27,7 @@ Game::Game()
 
 Game::~Game()
 {
-	if (_myPlayer)
-	{
-		SafeDelete(_myPlayer);
-		_myPlayer = nullptr;
-	}
+
 }
 
 void Game::GameStart(uint16_t width, uint16_t height, std::vector<uint8_t> tiles)
@@ -39,15 +36,22 @@ void Game::GameStart(uint16_t width, uint16_t height, std::vector<uint8_t> tiles
 
 	//mainlevel 변경
 	mainLevel = new GameLevel(width, height, std::move(tiles));
-	_myPlayer = new Player(_myId);
+	auto _myPlayer = std::make_shared<Player>(_myId);
 	mySession->SetMyPlayer(_myPlayer, _myId);
 	mainLevel->AddNewActor(_myPlayer);
 }
 
+void Game::ConstructCastle(Vector2 castlePos,uint16_t playerId)
+{
+	auto castle = std::make_shared<Castle>(castlePos, playerId, playerId);
+	_castles.try_emplace(playerId, castle);
+	mainLevel->AddNewActor(castle);
+
+}
 void Game::WaitingRoom(uint16_t playerId)
 {
 	system("cls");
-
+	//SetNewLevel(new WaitingRoomLevel());
 	//mainlevel 변경
 	mainLevel = new WaitingRoomLevel();
 	_myId = playerId;
@@ -63,32 +67,47 @@ void Game::UnitSpawn(uint16_t unitId, uint16_t playerId, Vector2 spawnPos)
 	if (_myId == playerId)
 	{
 		//_myPlayer->AddUnit(unitId);
-		unit = std::make_shared<Unit>(spawnPos, playerId);
+		unit = std::make_shared<Unit>(spawnPos, unitId, playerId);
 	}
 	else
 	{
-		unit = std::make_shared<Unit>(spawnPos, Color::Red);
+		unit = std::make_shared<Unit>(spawnPos, unitId, Color::Red);
 	}
-	mainLevel->AddNewActor(unit.get());
+	mainLevel->AddNewActor(unit);
+	std::lock_guard<std::mutex> lock(_unitsLock);
 	_units.try_emplace(unitId, unit);
 }
 
 void Game::UnitMove(uint16_t unitId, std::vector<Vector2> path)
 {
 	auto unitIter = _units.find(unitId);
+	if (unitIter == _units.end()) return;
 	auto unit = unitIter->second;
 
 	if (unit)
 	{
 		unit->MoveUnit(path);
+		unit->showMove();
 	}
 }
+
+//void Game::UnitMove(uint16_t unitId, Vector2 movePos)
+//{
+//	auto unitIter = _units.find(unitId);
+//	auto unit = unitIter->second;
+//
+//	if (unit)
+//	{
+//		unit->MoveUnit(movePos);
+//	}
+//}
 
 void Game::UnitAttacked(std::vector<uint16_t> unitsId)
 {
 	for (uint16_t unitId : unitsId)
 	{
 		auto unitIter = _units.find(unitId);
+		if (unitIter == _units.end()) return;
 		auto unit = unitIter->second;
 
 		if (unit)
@@ -101,11 +120,34 @@ void Game::UnitAttacked(std::vector<uint16_t> unitsId)
 void Game::UnitDespawn(uint16_t unitId)
 {
 	auto unitIter = _units.find(unitId);
+	if (unitIter == _units.end()) return;
 	auto unit = unitIter->second;
 	if (unit)
 	{
+		std::lock_guard<std::mutex> lock(_unitsLock);
 		_units.erase(unitId);
 		unit->Destroy();
+	}
+}
+
+void Game::AttackedCastle(uint16_t castleId)
+{
+	auto castleIter = _castles.find(castleId);
+	if (castleIter == _castles.end()) return;
+	auto castle = castleIter->second;
+	if (castle)
+	castle->PlayDamageAnim();
+}
+
+void Game::DestroyCastle(uint16_t castleId)
+{
+	auto castleIter = _castles.find(castleId);
+	if (castleIter == _castles.end()) return;
+	auto castle = castleIter->second;
+	if (castle)
+	{
+		_castles.erase(castleIter);
+		castle->Destroy();
 	}
 }
 

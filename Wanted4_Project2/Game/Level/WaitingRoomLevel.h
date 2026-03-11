@@ -1,14 +1,14 @@
 ﻿#pragma once
-#include "Level\ManageLevel.h"
+#include "Level\Level.h"
 #include "Math/Color.h"
 
 using namespace Wanted;
 
 
-class WaitingRoomLevel :   public ManageLevel
+class WaitingRoomLevel :   public Level
 {
 
-	RTTI_DECLARATIONS(WaitingRoomLevel, ManageLevel)
+	RTTI_DECLARATIONS(WaitingRoomLevel, Level)
 
 public:
 	WaitingRoomLevel();

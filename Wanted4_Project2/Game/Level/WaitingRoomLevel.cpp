@@ -26,7 +26,7 @@ void WaitingRoomLevel::Draw()
 {
 	super::Draw();
 
-	Renderer::Get().Submit("Game", Vector2::Zero);
+	Renderer::Get().Submit("Waiting...", Vector2(Engine::Get().GetWidth() /2, Engine::Get().GetHeight() / 2), Color::LightBlue);
 //	Renderer::Get().SubmitFile("mify.txt", Vector2::Zero);
 
 }

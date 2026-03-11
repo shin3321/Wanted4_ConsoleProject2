@@ -53,16 +53,3 @@ bool QuadTree::insert(const Point& p)
     return nw->insert(p) || ne->insert(p) ||
         sw->insert(p) || se->insert(p);
 }
-
-bool QuadTree::insertChild(const Point& p)
-{
-    if (!_boundary.contains(p)) return false;
-    if ((int)_points.size() < _capacity && !_isDivided)
-    {
-        _points.push_back(p); return true;
-    }
-    if (!_isDivided) subdivide();
-    return insertChild(p);
-}
-
-

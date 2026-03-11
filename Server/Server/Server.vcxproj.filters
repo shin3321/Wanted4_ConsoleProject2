@@ -54,6 +54,9 @@
     <ClCompile Include="01.Game\QuadTree\QuadTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="01.Game\Actor\Castle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -117,6 +120,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="01.Game\QuadTree\Rectangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="01.Game\Actor\Castle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
