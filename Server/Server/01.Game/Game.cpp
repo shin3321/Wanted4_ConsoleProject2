@@ -32,7 +32,6 @@ void Game::init(HANDLE iocpHandle, OverlappedExPool& overlappedPool)
 
 void Game::accept(SOCKET socket)
 {
-
 	int newId = getClientId();
 	auto newSession = std::make_shared<Session>(*_overlappedPool);
 	newSession->_socket = socket;
@@ -104,6 +103,8 @@ uint16 Game::getUnittId()
 void Game::closeSocket(int sessioneId)
 {
 	std::shared_ptr<Session> session = sessions[sessioneId];
+	std::cout << "Invalid Session. Id: " << sessioneId << "\n";
+
 	if (!session)
 	{
 		std::cout << "Invalid Session In Recv. Id: " << sessioneId << "\n";

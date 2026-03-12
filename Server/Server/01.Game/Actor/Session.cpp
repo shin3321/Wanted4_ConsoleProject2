@@ -10,6 +10,7 @@ void Session::doSend(const char* packet, uint16_t packetSize)
 {
 	_sendOver = _overlappedPool->allocOver();
 	_sendOver->reset(packet, packetSize);
+	_sendOver->_type = OP_TYPE::SEND;
 
 	int ret = WSASend(_socket, &_sendOver->_wsaBuf, 1, nullptr, 0,&_sendOver->_overlapped, nullptr);
 
@@ -22,7 +23,6 @@ void Session::doSend(const char* packet, uint16_t packetSize)
 			_overlappedPool->freeOver(_sendOver);
 		}
 	}
-
 }
 
 void Session::doRecv()

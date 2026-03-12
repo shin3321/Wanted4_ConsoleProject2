@@ -151,10 +151,15 @@ void SeverCore::runWorkThread()
 
 		switch (ex_over->_type)
 		{
+		case OP_TYPE::SEND:
+		{
+			_overlappedPool.freeOver(ex_over);
+
+			break;
+		}
 		case OP_TYPE::ACCEPT:
 		{
 			Game::get().accept(_clientSocket);
-
 
 			//다른 클라이언트를 받기 위해 accept 열어 두기
 			_clientSocket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
@@ -163,7 +168,6 @@ void SeverCore::runWorkThread()
 			//accept
 			_acceptOverlapped._type = OP_TYPE::ACCEPT;
 			AcceptEx(_listenSocket, _clientSocket, _acceptOverlapped._acceptBuf, 0, addrSize + 16, addrSize + 16, 0, &_acceptOverlapped._overlapped);
-
 			break;
 		}
 		case OP_TYPE::RECV:
