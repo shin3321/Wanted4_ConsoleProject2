@@ -118,6 +118,7 @@
     <ClCompile Include="Network\PacketHandler.cpp" />
     <ClCompile Include="Network\PacketQueue.cpp" />
     <ClCompile Include="Network\Session.cpp" />
+    <ClCompile Include="Utils\AStar\Astar.cpp" />
     <ClCompile Include="Utils\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +142,8 @@
     <ClInclude Include="Network\PacketHandler.h" />
     <ClInclude Include="Network\PacketQueue.h" />
     <ClInclude Include="Network\Session.h" />
+    <ClInclude Include="Utils\AStar\Astar.h" />
+    <ClInclude Include="Utils\AStar\Node.h" />
     <ClInclude Include="Utils\Timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

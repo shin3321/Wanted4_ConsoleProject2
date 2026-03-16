@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Actor\Actor.h"
 #include "Utils/Timer.h"
+#include "Utils/AStar/Astar.h"
 
 #include <iostream>
 #include <vector>
@@ -32,6 +33,8 @@ public:
 
 	void MoveUnit(std::vector<Vector2> path);
 	void MoveUnit(Vector2 movePos);
+
+	void MoveAStar(Vector2 goalPos);
 	void move();
 	void showMove();
 
@@ -60,6 +63,9 @@ public:
 	Timer _timer;
 	float _moveTimer = 0.05f;
 	bool _isMoving = true;
+
+	//AStar 관련
+	AStar _pathFinder;
 	
 	//std::queue<Vector2> _path = {};
 	std::vector<Vector2> _path = {};

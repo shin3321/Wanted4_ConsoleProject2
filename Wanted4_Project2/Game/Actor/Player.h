@@ -8,6 +8,7 @@
 
 using namespace Wanted;
 
+class Unit;
 class INetwork;
 class Player : public Actor
 {
@@ -54,7 +55,7 @@ private:
 	Timer timer;
 
 	std::unordered_set<uint16_t> _myUnitIds;      // 내 유닛 ID 목록
-	std::unordered_set<uint16_t> _selectedUnitIds; // 선택된 유닛 ID 목록
+	std::unordered_map<uint16_t, std::shared_ptr<Unit>> _selectedUnitIds; // 선택된 유닛 ID 목록
 
 	// 드래
 	Vector2 _dragStart;

@@ -345,7 +345,7 @@ void Game::moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos)
 	auto unit = findUnit(unitId);
 	if (unit)
 	{
-		std::vector<Vector2> path = unit->moveUnit(movePos);
+	//	std::vector<Vector2> path = unit->moveUnit(movePos);
 
 		Packet movePacket;
 		movePacket.write<uint16>(0);
@@ -353,12 +353,13 @@ void Game::moveUnit(uint16 playerId, uint16 unitId, Vector2 movePos)
 		movePacket.write<uint16>(unitId);
 		movePacket.write<uint16>(playerId);
 
-		//경로 개수 먼저 전송
-		movePacket.write<uint16>(static_cast<uint16>(path.size()));
-		for (const Vector2& pos : path)
-		{
-			movePacket.write<Vector2>(pos);
-		}
+		////경로 개수 먼저 전송
+		//movepacket.write<uint16>(static_cast<uint16>(path.size()));
+		//for (const vector2& pos : path)
+		//{
+		//	movepacket.write<vector2>(pos);
+		//}
+
 		uint16 packetSize = movePacket.size();
 		uint16 networkSize = htons(packetSize);
 		memcpy(movePacket.getBuffer().data(), &networkSize, sizeof(uint16_t));

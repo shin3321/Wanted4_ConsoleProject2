@@ -73,10 +73,9 @@ void Player::Tick(float deltaTime)
 
 void Player::UpdateDragSelection(Vector2 mousePos)
 {
-	for (uint16_t unitId : _selectedUnitIds)
+	for (auto& [unitId, unit] : _selectedUnitIds)
 	{
-		auto unit = Game::Get().GetUnits().find(unitId);
-		unit->second->Unselect();
+		unit->Unselect();
 	}
 	_dragStart = mousePos;
 	_isDragging = true;
@@ -98,7 +97,7 @@ void Player::FinishDragSelection(Vector2 mousePos)
 			unit->_pos.y >= minY && unit->_pos.y <= maxY)
 		{
 			unit->Select();
-			_selectedUnitIds.insert(id);
+			_selectedUnitIds.insert({ id, unit });
 		}
 	}
 }
@@ -119,17 +118,19 @@ void Player::SpawnUnit(Vector2 mousePos)
 void Player::MoveUnit(Vector2 mousePos)
 {
 	if (_selectedUnitIds.empty()) return;
+
+	
+
+	for (auto&[ unitId, unit]: _selectedUnitIds)
+	{
+		unit->
+	}
 	Packet unitMovePacket;
 	unitMovePacket.write<uint16_t>(0);
 	unitMovePacket.write<uint16_t>(PK_CS_MOVE_UNIT);
 	unitMovePacket.write<uint16_t>(_id);
 	unitMovePacket.write<Vector2>(mousePos);
 	unitMovePacket.write<uint16_t>(static_cast<uint16_t>(_selectedUnitIds.size()));
-
-	for (uint16_t unitId : _selectedUnitIds)
-	{
-		unitMovePacket.write<uint16_t>(unitId);
-	}
 	uint16_t packetSize = static_cast<uint16_t>(unitMovePacket.size());
 	uint16_t networkSize = htons(packetSize);
 	memcpy(&unitMovePacket.getBuffer()[0], &networkSize, sizeof(uint16_t));

@@ -1,5 +1,6 @@
 ﻿#include "Unit.h"
 #include "Render/Renderer.h"
+
 const Unit::DamageFrame Unit::_DamagedSequence[] =
 {
 	Unit::DamageFrame("U", 0.1f, Color::Green),
